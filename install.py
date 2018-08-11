@@ -1,12 +1,7 @@
 
-def install(apt,pn):
-    pkg = apt[pn]
-    if not pkg.is_installed:
-        pkg.mark_install()
-        try:
-            apt.commit()
-        except Exception as e:
-            error('install %s error, %s'%(pn,str(e)))
+def apt(packages):
+    process = Popen(['apt-get','-y','install']+packages)
+    process.communicate()
 
 def check(fn,msg):
     if path.exists(fn):
@@ -25,55 +20,37 @@ def create(fn,lines):
 
 
 if __name__ == "__main__":
-    from logging import info, error
+    from pip.__main__ import _main as install
+    # share
+    install(['install','--upgrade','configparser'])
+    # app
+    install(['install','--upgrade','inputs'])
+    install(['install','--upgrade','pynput'])
+    # web
+    install(['install','--upgrade','flask'])
+    install(['install','--upgrade','flask-socketio'])
+    install(['install','--upgrade','flask-login'])
+    install(['install','--upgrade','flask-sse'])
 
-    #from pip import main
-    #main(['install', 'getopts'])
-    #main(['install', 'configparser'])
-    #main(['install', 'inputs'])
-    #main(['install', 'pynputs'])
+    #install(['install','--upgrade','Pyrebase']) #?
+    #install(['install','--upgrade','yowsup2']) # whats app
 
-    #main(['install', 'flask'])
-    #main(['install', 'flask-socketio'])
-    #main(['install', 'flask-login'])
-    #main(['install', 'flask-sse'])
-
-    #main(['install', 'Pyrebase']) #?
-    #main(['install', 'yowsup2']) # whats app
-
-
-    # install mjpeg-streamer
-    # Update & Install Tools
-    #sudo apt-get -y update
-
-    #from apt.cache import Cache
-    #apt = Cache()
-    #apt.update()
-    #apt.open()
-
-    #install(apt,'build-essential') #sudo apt-get -y install build-essential libjpeg8-dev imagemagick libv4l-dev cmake
-    #install(apt,'libjpeg8-dev')
-    #install(apt,'imagemagick')
-    #install(apt,'libv4l-dev')
-    #install(apt,'cmake')
-    #Popen(['cd','/tmp'])
-    #Popen(['git','clone','https://github.com/vog3lm/mjpg-streamer.git']) # git clone https://github.com/vog3lm/mjpg-streamer.git
-    #Popen(['cd','mjpg-streamer/mjpg-streamer-experimental'])
-    #Popen(['make'])
-    #Popen(['sudo','make','install'])
-
-
-    # apt-get -y install nmap
-    # apt-get -y install wireshark
-    # apt-get -y install john # john the ripper
-    # apt-get -y install hydra
-    # apt-get -y install aircrack-ng
-
-    # wget https://downloads.metasploit.com/data/releases/metasploit-latest-linux-x64-installer.run
-    # wget https://downloads.metasploit.com/data/releases/metasploit-latest-linux-x64-installer.run.sha1
-    # echo $(cat metasploit-latest-linux-x64-installer.run.sha1)'  'metasploit-latest-linux-x64-installer.run > metasploit-latest-linux-x64-installer.run.sha1 
-    # shasum -c metasploit-latest-linux-x64-installer.run.sha1
-    # chmod +x ./metasploit-latest-linux-x64-installer.run && sudo ./metasploit-latest-linux-x64-installer.run
+    from subprocess import Popen
+    process = Popen(['apt-get','update'])
+    process.communicate()
+    # mjpg streamer
+    apt(['build-essential','libjpeg8-dev','imagemagick','libv4l-dev','cmake'])
+    #process = Popen(['cd','/tmp','git','clone','https://github.com/vog3lm/mjpg-streamer.git','make','sudo','make','install'])
+    #process.communicate()
+    # tools
+    #apt(['nmap','wireshark','john','hydra','aircrack-ng'])
+    #Popen(['wget','https://downloads.metasploit.com/data/releases/metasploit-latest-linux-x64-installer.run'
+    #      ,'wget','https://downloads.metasploit.com/data/releases/metasploit-latest-linux-x64-installer.run.sha1'
+    #      ,'echo','$(cat metasploit-latest-linux-x64-installer.run.sha1)'
+    #             ,'metasploit-latest-linux-x64-installer.run > metasploit-latest-linux-x64-installer.run.sha1 '
+    #      ,'shasum','-c','metasploit-latest-linux-x64-installer.run.sha1'
+    #      ,'chmod','+x','./metasploit-latest-linux-x64-installer.run','&&','./metasploit-latest-linux-x64-installer.run'])
+    #process.communicate()
 
     # OWASP Zed
     # Reaver
@@ -82,13 +59,14 @@ if __name__ == "__main__":
     # Macchanger
 
 
-
+    from logging import info, error
     from os import getcwd, system, path
-    from share.Process import ProcessLogger
+    from share.Process import ProcessLogger, ProcessDeamon
     ProcessLogger().decorate({}).create()
     fn = '%s/hells.kitchen'%getcwd()
     create(fn,['[deamons]'])
     check(fn,'deamon configuration file')
+    ProcessDeamon().create().initialize('app').initialize('web').write()
     fn = '/bin/muk'
     lines = ["#!/usr/bin/python\n"
         ,"from os import chdir\n"
@@ -105,8 +83,8 @@ if __name__ == "__main__":
         ,"from share.Process import ProcessShell\n"
         ,"if 'start' == command:\n"
         ,"    ProcessShell().start(service,argv[2:])\n"
-        ,"elif 'reset' == command:\n"
-        ,"    ProcessShell().reset(service)\n"
+        ,"elif 'restart' == command:\n"
+        ,"    ProcessShell().restart(service)\n"
         ,"elif 'kill' == command:\n"
         ,"    ProcessShell().kill(service)\n"
         ,"elif 'reset' == command:\n"

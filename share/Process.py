@@ -212,6 +212,13 @@ class ProcessShell(object): # directly called from /bin/muk
                 prc = Popen(['python','%s/start.py'%service]+argv) # non-blocking
                 sleep(0.1)
 
+    def restart(self,service,argv):
+        if service in self.services:
+            self.services = [service]
+        for service in self.services:
+            deamon = self.deamons.read(service)
+            logging.error('restart %s with new options not implemented'%service)
+
     def kill(self,service):
         if service in self.services:
             self.services = [service]
