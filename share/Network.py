@@ -1,16 +1,79 @@
 import logging, json, struct
 
+def reader(c,n): # recv n bytes or return None if EOF is hit
+    data = b''
+    while len(data) < n:
+        packet = c.recv(n - len(data))
+        if not packet:
+            return None
+        data += packet
+    return data
+
+class EventNetwork(object):
+    def __init__(self):
+        self.events = {}
+        self.args = {'trace':False}
+        self.flag = True
+        from queue import Queue
+        self.queue = Queue()
+        from threading import Thread, Event
+        self.lock = Event()
+        self.thread = Thread(target=self.thread,args=[self.queue])
+        self.thread.setDaemon(True)
+        self.thread.start()
+
+    def decorate(self,arguments):
+        from Process import decorate
+        return decorate(self,arguments)
+
+    def attach(self,evts):
+        keys = self.events.keys()
+        for key in evts.keys():
+            if not key in keys:
+                self.events[key] = []
+            self.events[key].append(evts.get(key))
+        return self
+
+    def emits(self,evts):
+        for evt in evts:
+            self.emit(evt.get('id'),evt)
+        return self
+
+    def emit(self,call,data):
+        evtIds = self.events.keys();
+        if call in evtIds:
+            try:
+                for evt in self.events.get(call):
+                    evt(data)
+            except Exception as e:
+                if self.args.get('trace'):
+                    logging.exception("emit error! %s not reachable due to %s"%(call,e))
+                else:
+                    logging.error("emit error! %s not reachable due to %s"%(call,e))
+        else:
+            logging.debug('%s event not found. known events are %s'%(call,', '.join(evtIds)))
+        return self
+
+    def threaded(self,call,data):
+        data['call'] = call
+        self.queue.put(data)
+        self.lock.set()
+
+    def thread(self,queue):
+        while self.flag:
+            self.lock.wait()
+            data = queue.get()
+            self.emit(data.get('call'),data)
+            queue.task_done()
+
 class SocketClient(object):
     def __init__(self):
         # blocking mode: timeout=None
         self.args = {'host':'localhost','port':'unset','framesize':4096,'timeout':5,'payload':'large','deamon':False}
 
     def decorate(self,arguments):
-        keys = self.args.keys()
-        for key in arguments:
-            if key in keys:
-                self.args[key] = arguments[key]
-        return self
+        from Process import decorate
+        return decorate(self,arguments)
 
     def send(self,data,host=None,port=None):
         if(None == host):
@@ -56,7 +119,7 @@ class SocketServer(object):
         self.events = {'kill-socket':self.kill}
         from socket import SOCK_STREAM, AF_INET
         self.args = {'id':'unset','host':'127.0.0.1','port':'unset','clients':5,'transport':SOCK_STREAM,'protocol':AF_INET,'framesize':4096,'timeout':None
-                    ,'reply':False,'payload':'large','deamon':False}
+                    ,'reply':False,'payload':'large','deamon':False,'emitter':None}
         self.server = None
         self.thread = None
         self.reply = {'call':'net-event','data':'no reply server response from %s:%s'%(self.args.get('host'),self.args.get('port'))}
@@ -64,19 +127,14 @@ class SocketServer(object):
         self.listening = False
 
     def decorate(self,arguments):
-        keys = self.args.keys()
-        for key in arguments:
-            if key in keys:
-                self.args[key] = arguments[key]
-        return self
+        from Process import decorate
+        return decorate(self,arguments)
 
-    def create(self,dispatcher):
-        dispatcher.attach(self.events) # register own events
-        self.emitter = dispatcher
+    def create(self):
+        self.emitter = self.args.get('emitter')
         host = self.args.get('host')
         port = self.args.get('port')
         try:
-
             from socket import socket, timeout, gaierror, herror, error, SOL_SOCKET, SO_REUSEADDR
             import threading, struct
             self.server = socket(self.args.get('protocol'),self.args.get('transport')) 
@@ -86,7 +144,7 @@ class SocketServer(object):
             # self.server.setblocking(True) # def:True = 0, 
             self.server.listen(self.args.get('clients'))
             self.args['host'], self.args['port'] = self.server.getsockname()
-            from Util import ProcessDeamon
+            from Process import ProcessDeamon
             identifier = self.args.get('id')
             deamons = ProcessDeamon().create()
             deamon = deamons.read(identifier)
@@ -97,7 +155,7 @@ class SocketServer(object):
             deamon['port'] = port
             deamons.update(identifier,deamon)
             deamons.write()
-            logging.info('socket created on %s:%s'%(host,port))
+            logging.info('%s socket created on %s:%s'%(self.args.get('id'),host,port))
             from threading import Thread
             self.thread = Thread(target=self.listen)
             # self.thread = threading.Thread(target=self.listen,args=[server,receive,sender])
@@ -105,17 +163,17 @@ class SocketServer(object):
             self.thread.start()
             self.reply = {'call':'net-event','data':'no reply server response from %s:%s'%(host,port)}
         except timeout, msg:
-            logging.error('server timeout error! server kill forced! %s:%s %s'%(host,port,msg))
+            logging.error('%s server timeout error! server kill forced! %s:%s %s'%(self.args.get('id'),host,port,msg))
         except gaierror, msg: # socket get address/name info errors
-            logging.error('server get address info error! server kill forced! %s:%s %s'%(host,port,msg))
+            logging.error('%s server get address info error! server kill forced! %s:%s %s'%(self.args.get('id'),host,port,msg))
         except herror, msg:  # socket address related errors
-            logging.error('server host error! server kill forced! %s:%s %s'%(host,port,msg))
+            logging.error('%s server host error! server kill forced! %s:%s %s'%(self.args.get('id'),host,port,msg))
         except error, msg:
-            logging.error('server default error! server kill forced! %s:%s %s'%(host,port,msg))
+            logging.error('%s server error! server kill forced! %s:%s %s'%(self.args.get('id'),host,port,msg))
         return self
 
     def listen(self):
-        logging.info('socket listening on %s:%s'%(self.args.get('host'),self.args.get('port')))
+        logging.info('%s socket listening on %s:%s'%(self.args.get('id'),self.args.get('host'),self.args.get('port')))
         self.listening = True
         from ast import literal_eval
         while self.listening:
@@ -130,7 +188,7 @@ class SocketServer(object):
         self.listening = False
         self.server.close()
         identifier = self.args.get('id')
-        from Util import ProcessDeamon
+        from Process import ProcessDeamon
         deamons = ProcessDeamon().create()
         deamon = deamons.read(identifier)
         if None == deamon:
@@ -139,7 +197,7 @@ class SocketServer(object):
         deamon['host'] = "0"
         deamon['port'] = 0
         deamons.update(identifier,deamon).write()
-        logging.info('socket on %s:%s stopped'%(self.args.get('host'),self.args.get('port')))
+        logging.info('%s socket on %s:%s stopped'%(self.args.get('id'),self.args.get('host'),self.args.get('port')))
         return self
 
     def small(self,c): # small payload
@@ -164,12 +222,3 @@ class SocketServer(object):
     def response(self,c,dto):
         responose = json.dumps(dto)
         c.sendall(struct.pack('>I', len(responose)) + responose)
-
-def reader(c,n): # recv n bytes or return None if EOF is hit
-    data = b''
-    while len(data) < n:
-        packet = c.recv(n - len(data))
-        if not packet:
-            return None
-        data += packet
-    return data
