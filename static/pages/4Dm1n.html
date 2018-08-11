@@ -1,0 +1,286 @@
+{% extends "index.html" %}
+{% block head %}
+	<meta name="theme-color" content="#222222"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+	<link rel="stylesheet" href="/static/css/font.awesome.min.css"/>
+
+	<script type="text/javascript" src="/static/js/jq.min.js"></script>
+	<!-- https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js -->
+	<script type="text/javascript" src="/static/js/flask.sio.js"></script>
+	<script type="text/javascript" src="/static/js/backend.js"></script>
+
+
+	<!-- video wrapper plugin
+	<link rel="stylesheet" href="https://cdn.plyr.io/2.0.15/plyr.css">
+	<script src="https://cdn.plyr.io/2.0.15/plyr.js"></script>
+	-->
+	<script type="text/javascript">
+
+		function PageEventListener(){
+			var events = {
+				'toggle-footer':(data) => {
+					var header = $('header');
+					if(header.hasClass('foot-flag')){
+						header.css({'height':'100%'});
+						header.removeClass('foot-flag');
+					}else{
+						header.css({'height':'60%'});
+						header.addClass('foot-flag');
+					}
+				}
+				,'get-log':(data) => {
+					$('console logs').children().addClass('hide');
+					$('log#'+data.id).removeClass('hide');
+				}
+				,'console-connected':(data) => {
+					console.log(data);
+				}
+				,'console-got':(data) => {
+					console.log(data);
+				}
+
+
+				,'cameras-connected':(data) => {
+					$('body').trigger('send-cameras',{'call':'send-cameras','id':'cameras-connected','request':'video-update'})
+				}
+				,'cameras-got':(data) => {
+					console.log(data);
+				}
+				,'view-camera':(data) => {
+					console.log(data);
+
+				}
+				,'preview-camera':(data) => {
+					console.log(data);
+					var preview = $('cameras preview');
+					preview.removeClass('hide');
+					preview.find('img').attr('src','http://localhost:8003/?action=stream')
+				}
+				,'toggle-camera':(data) => {
+					// $('cameras detail').addClass('hide'); // close all
+					$('cameras preview'+data.url+'-camera').removeClass('hide');
+				}
+			}
+			this.create = function(dispatcher){
+				if(dispatcher){
+					dispatcher.append({'events':Object.keys(events),'issues':Object.values(events)})
+				}
+			}
+		}
+
+		var dispatcher = new V13wEv3ntD1spatch3r
+		$(document).ready(function(){
+			$('console logs').children().first().removeClass('hide');
+			new Sock3tEv3ntD1spatch3r('console').create(dispatcher);
+			new Sock3tEv3ntD1spatch3r('cameras').create(dispatcher);
+			new PageEventListener().create(dispatcher);
+		});
+		$(window).load(function() {
+			dispatcher.register().unleash();
+			$('body').trigger('connect-console',{'call':'connect-console','id':'doc-load'});
+			$('body').trigger('connect-cameras',{'call':'connect-cameras','id':'doc-load'});
+		});
+
+	</script>
+
+	<style type="text/css">
+
+
+		/* Geometry */
+		* {margin: 0px;padding: 0px;}
+		/* Geometry */
+		html,body { position:fixed; height:100%; width:100%; padding:0px; margin:0px; overflow:hidden; -webkit-overflow-scrolling:hidden; }
+
+		a    		 { display:inline-block; height:32px; line-height:32px; }
+		a.fa 		 { width:32px; line-height:32px; float:left; }
+		a.fa-stack	 { width:32px; height:32px; }
+		a.fa-stack i { padding-top:4px; padding-bottom:4px; }
+
+		.hide { display:none; }
+		.right{ float:right !important;}
+
+		header {
+			position:relative;
+		    width:100%;
+		    height:100%;
+		}
+
+		footer {
+			position:relative;
+		    width:100%;
+		    height:40%;
+		}
+
+		header a#toggle-footer{
+			position: absolute;
+			width: calc(100% - 32px - 10%);
+			left:10%;
+			bottom: 0px;
+			text-align:center;
+		}
+
+
+
+
+		 /* font */
+		a.fa 					  { vertical-align:middle; text-align:center; font-size:1rem; }
+		a.fa-stack				  { vertical-align:middle; text-align:center; font-size:0.8rem; }
+
+		/* Design and Color */
+		body                { background:rgba(255,255,255,1); color:rgba(187,187,187,1); text-decoration:none; /*font-family:'mp-light', serif;*/ }
+		a, h1, h2, h3,
+		h4, h5, h6          { color:rgba(187,187,187,1); text-decoration:none; /*font-family:'mp-light', serif;*/ }
+		footer a,
+		footer input 		{ color:rgba(34,34,34,1); }
+
+		body header{
+			background:rgba(34,34,34,1);
+		}
+		body footer{
+			background-color:rgba(255,255,255,1); 
+			color:rgba(34,34,34,1);
+		}
+
+
+
+
+		console{
+		    position: absolute;
+		    width:100%;
+		    height:100%;
+		}
+
+		console tabs{
+			display:inline-block;
+		    height:32px;
+		    width:100%;
+		}
+		console tabs a.label{
+		    height:32px;
+		    line-height:32px;
+		    vertical-align:middle;
+		    padding:0px 7px 0px 7px;
+		    font-family:monospace;
+		    font-size:1.5rem;
+		}
+
+		console logs{
+			position:absolute;
+			height:calc(100% - 32px - 14px);
+			width:calc(100% - 14px);
+			margin:7px 7px 7px 7px;
+		}
+
+		console logs log{
+			position:absolute;
+			float:left;
+			width:100%;
+			height:100%;
+			word-break:break-all;
+			overflow-y:scroll;
+		    font-family:monospace;
+		    font-size:1.5rem;
+		}
+
+		cameras{
+			position:absolute;
+			top:0px;
+			width:calc(480px + 32px);
+			height:320px;
+
+		    font-family:monospace;
+		    font-size:1.5rem;			
+		}
+		cameras camera,
+		cameras detail{
+			display:inline-block;
+			width:100%;
+		}
+		cameras preview{
+			position:absolute;
+			width:100%;
+		}
+		cameras preview img{
+			width:calc(100% - 32px);
+			height:100%;
+		}
+		cameras preview switch{
+			width: 32px;
+		    height: 100%;
+		    background:#222222;
+		    float:right;
+		}
+		cameras preview switch a{
+			width:32px;
+			height:32px;
+		    line-height:32px;
+		    vertical-align:middle;
+		    text-align: center;
+		}
+		cameras preview switch a.fa-times{
+			position:absolute;
+			bottom:0px;
+		}
+
+
+	</style>
+{% endblock %}
+{% block body %}
+	<header>
+		<img class="after-effect" src="" alt="">
+		<section id="content">
+			<cameras>
+				<preview class="hide">
+					<img class="xform" src=""/>
+					<switch>
+						<a href="#" url="front" call="preview-camera">F</a>
+						<a href="#" url="back" call="preview-camera">B</a>
+						<a href="#" call="preview-camera" class="fa fa-times"></a>
+					</switch>
+				</preview>
+				<camera>
+					<a href="#" url="front" call="view-camera">front camera</a>
+					<a href="#" url="front" call="toggle-camera" class="fa fa-chevron-down right"></a>
+					<a href="#" url="front" call="preview-camera" class="fa fa-eye right"></a>
+				</camera>
+				<detail id="front-camera" class="hide">
+					<p>url: http://localhost:8002/?action=stream</p>
+					<p>user: U$eR</p>
+					<p>pass: Pa$$</p>
+				</detail>
+				<camera>
+					<a href="#" url="back" call="view-camera">back camera</a>
+					<a href="#" url="back" call="toggle-camera" class="fa fa-chevron-down right"></a>
+					<a href="#" url="back" call="preview-camera" class="fa fa-eye right"></a>
+				</camera>
+				<detail id="back-camera" class="hide">
+					<p>url: http://localhost:8003/?action=stream</p>
+					<p>user: U$eR</p>
+					<p>pass: Pa$$</p>
+				</detail>
+			</cameras>
+			<controls>
+				
+			</controls>
+		</section>
+		<a href="#" id="toggle-footer" class="fa fa-chevron-up" call="toggle-footer"></a>
+	</header>
+	<footer>
+		<console>
+			<tabs>
+			{% for item in logs %}
+				<a href="#" id="{{ item.title }}" class="label" call="get-log">{{ item.title }}</a>
+			{% endfor %}
+				<a href="#" class="right fa fa-refresh" call="refresh-console"></a>
+			</tabs>
+			<logs>
+			{% for item in logs %}
+				{% with log=item.data, id=item.title %}{% include 'fragments/test.html' %}{% endwith %}
+			{% endfor %}
+			</logs>
+		</console>
+	</footer>
+
+
+{% endblock %}
