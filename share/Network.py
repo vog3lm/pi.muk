@@ -69,27 +69,34 @@ class EventNetwork(object):
 class SocketClient(object):
     def __init__(self):
         # blocking mode: timeout=None
-        self.args = {'host':'localhost','port':'unset','framesize':4096,'timeout':5,'payload':'large','deamon':False}
+        self.args = {'host':'localhost','port':'unset','framesize':4096,'timeout':5,'payload':'large','deamon':False,'tls':False}
+        self.sender = self.unsecure
+        self.handler = self.large
 
     def decorate(self,arguments):
-        from Process import decorate
-        return decorate(self,arguments)
+        from Process import decorate   
+        decorate(self,arguments)
+        keys = self.args.keys()
+        if 'tls' in keys:
+            if self.args.get('tls'):
+                self.sender = self.secure
+            else:
+                self.sender = self.unsecure
+        if 'payload' in keys:
+            if 'large' == self.args.get('payload'):
+                self.handler = self.large
+            else:
+                self.handler = self.small
+        return self
 
     def send(self,data,host=None,port=None):
         if(None == host):
             host = self.args.get('host')
         if(None == port):
             port = self.args.get('port')
-        from socket import socket, timeout, gaierror, herror, error
-        from json import dumps
+        from socket import timeout, gaierror, herror, error
         try:
-            client = socket()
-            client.settimeout(self.args.get('timeout'))
-            client.connect((host,int(port))) # errors: connection refused
-            logging.debug('socket send %s to %s:%s'%(data,host,port))
-            response = self.large(client,dumps(data))
-            client.close()
-            return response
+            return self.sender(data,host,port)
         except timeout, msg:
             logging.error('client timeout error! client kill forced! %s:%s %s'%(host,port,msg))
         except gaierror, msg: # socket get address/name info errors
@@ -98,6 +105,30 @@ class SocketClient(object):
             logging.error('client host error! client kill forced! %s:%s %s'%(host,port,msg))
         except error, msg:
             logging.error('client default error! client kill forced! %s:%s %s'%(host,port,msg))
+
+    def unsecure(self,data,host=None,port=None):
+        from socket import socket
+        from json import dumps
+        client = socket()
+        client.settimeout(self.args.get('timeout'))
+        client.connect((host,int(port))) # errors: connection refused
+        logging.debug('socket send %s to %s:%s'%(data,host,port))
+        response = self.handler(client,dumps(data))
+        client.close()
+        return response
+
+    def secure(self,data,host=None,port=None):
+        from ssl import wrap_socket, PROTOCOL_TLS, CERT_REQUIRED
+        client = socket()
+        client.settimeout(self.args.get('timeout'))
+        # https://docs.python.org/2/library/ssl.html#socket-creation
+        wrapper = wrap_socket(client,ca_certs="ssl/host.crt",cert_reqs=CERT_REQUIRED)
+        wrapper.connect((host,int(port))) # errors: connection refused
+        logging.debug('socket send %s to %s:%s'%(data,host,port))
+        response = self.handler(wrapper,dumps(data))
+        client.close()
+        wrapper.close()
+        return response
 
     def small(self,c,data): # small payload
         c.send(data)
@@ -125,6 +156,8 @@ class SocketServer(object):
         self.reply = {'call':'net-event','data':'no reply server response from %s:%s'%(self.args.get('host'),self.args.get('port'))}
         self.emitter = None
         self.listening = False
+        self.handler = self.large
+        self.listener = self.unsecure
 
     def decorate(self,arguments):
         from Process import decorate
@@ -134,6 +167,19 @@ class SocketServer(object):
         self.emitter = self.args.get('emitter')
         host = self.args.get('host')
         port = self.args.get('port')
+
+        keys = self.args.keys()
+        if 'tls' in keys:
+            if self.args.get('tls'):
+                self.listener = self.secure
+            else:
+                self.listener = self.unsecure
+        if 'payload' in keys:
+            if 'large' == self.args.get('payload'):
+                self.handler = self.large
+            else:
+                self.handler = self.small
+
         try:
             from socket import socket, timeout, gaierror, herror, error, SOL_SOCKET, SO_REUSEADDR
             import threading, struct
@@ -175,11 +221,28 @@ class SocketServer(object):
     def listen(self):
         logging.info('%s socket listening on %s:%s'%(self.args.get('id'),self.args.get('host'),self.args.get('port')))
         self.listening = True
+        self.listener()
+
+    def unsecure(self):
         from ast import literal_eval
         while self.listening:
             connection, client = self.server.accept()
             logging.info("socket event on %s:%s"%(self.args.get('host'),self.args.get('port')))
-            string = self.large(connection)
+            string = self.handler(connection)
+            nto = literal_eval(string)
+            logging.debug("received event data: %s"%nto)
+            self.emitter.emit(nto.get('call'),nto)
+
+    def secure(self):
+        from ast import literal_eval
+        while self.listening:
+            connection, client = self.server.accept()
+            # stream = ssl.wrap_socket(connection,server_side=True,certfile="ssl/host.crt",keyfile="ssl/host.key",ssl_version=ssl.PROTOCOL_TLS)
+            # data = stream.read()
+            # connstream.shutdown(socket.SHUT_RDWR)
+            # connstream.close()
+            logging.info("socket event on %s:%s"%(self.args.get('host'),self.args.get('port')))
+            string = self.handler(connection)
             nto = literal_eval(string)
             logging.debug("received event data: %s"%nto)
             self.emitter.emit(nto.get('call'),nto)
