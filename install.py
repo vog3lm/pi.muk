@@ -58,6 +58,8 @@ if __name__ == "__main__":
     # Crunch # wordlist attack
     # Macchanger
 
+    #Popen(['ssl/.ssl.sh','--install','--create'])
+    #p.communicate
 
     from logging import info, error
     from os import getcwd, system, path
