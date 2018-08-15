@@ -89,20 +89,16 @@ class GpioDummy(object):
 # ---------------------------------------------------------------
 class Gpios(object):
     def __init__(self):
-        self.args = {'warn':False} # mode:GPIO.BOARD|GPIO.BCM
-        self.events = {'kill-gpio':self.kill}
+        self.args = {'emitter':None,'warn':False} # mode:GPIO.BOARD|GPIO.BCM
+        self.events = {'create-gpio':self.create,'kill-gpio':self.kill}
         self.emitter = None
 
     def decorate(self,arguments):
-        from Util import decorate
+        from Process import decorate
         return decorate(self,arguments)
 
-    def create(self,dispatcher):
-        dispatcher.attach(self.events)
-        self.emitter = dispatcher
-        return self
-
-    def start(self,data={}):
+    def create(self,data={}):
+        self.emitter = self.args.get('emitter')
         try:
             import RPi.GPIO as GPIO
             self.gpio = GPIO

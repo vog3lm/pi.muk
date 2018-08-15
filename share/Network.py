@@ -147,9 +147,10 @@ class SocketClient(object):
 
 class SocketServer(object):
     def __init__(self):
-        self.events = {'kill-socket':self.kill}
+        self.events = {'kill-socket':self.kill,'create-socket':self.create,'socket-options':self.decorate}
         from socket import SOCK_STREAM, AF_INET
-        self.args = {'id':'unset','host':'127.0.0.1','port':'unset','clients':5,'transport':SOCK_STREAM,'protocol':AF_INET,'framesize':4096,'timeout':None
+        from random import randint
+        self.args = {'id':'unset','host':'0.0.0.0','port':randint(9000,9999),'clients':5,'transport':SOCK_STREAM,'protocol':AF_INET,'framesize':4096,'timeout':None
                     ,'reply':False,'payload':'large','deamon':False,'emitter':None}
         self.server = None
         self.thread = None
@@ -163,10 +164,14 @@ class SocketServer(object):
         from Process import decorate
         return decorate(self,arguments)
 
-    def create(self):
+    def create(self,data={}):
         self.emitter = self.args.get('emitter')
         host = self.args.get('host')
-        port = self.args.get('port')
+        try:
+            port = int(self.args.get('port'))
+        except ValueError as e:
+            logging.error('illegal port %s. %s'%(self.args.get('port'),e))
+            return self
 
         keys = self.args.keys()
         if 'tls' in keys:
@@ -199,8 +204,9 @@ class SocketServer(object):
                 return self
             deamon['host'] = host
             deamon['port'] = port
-            deamons.update(identifier,deamon)
-            deamons.write()
+            deamons.update(identifier,deamon).write()
+            from time import sleep
+            sleep(0.1)
             logging.info('%s socket created on %s:%s'%(self.args.get('id'),host,port))
             from threading import Thread
             self.thread = Thread(target=self.listen)

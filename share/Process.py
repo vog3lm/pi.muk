@@ -58,7 +58,7 @@ class ProcessStop(Exception):
 class ProcessEngine(object):
     def __init__(self):
         self.events = {'kill-process':self.kill,'kill-event':self.decorate,'service-event':self.decorate}
-        self.args = {'id':'unset','oops':None,'kills':['kill-video','kill-gamepad','kill-gpio','kill-socket'],'services':[]}
+        self.args = {'id':'unset','oops':None,'kills':[],'services':['create-logger']}
         self.flag = True
         self.emitter = None
         # from threading import Event
@@ -75,9 +75,13 @@ class ProcessEngine(object):
         keys = arguments.keys()
         for key in keys:
             if('kills' == key):
-                self.args.get('kills').append(arguments.get(key))
+                kills = self.args.get(key)
+                for event in arguments.get(key):
+                    kills.append(event)
             elif('services' == key):
-                self.args.get('services').append(arguments.get(key))
+                services = self.args.get(key)
+                for service in arguments.get(key):
+                    services.append(service)
             else:
                 self.args[key] = arguments.get(key)
         return self
@@ -91,10 +95,8 @@ class ProcessEngine(object):
         if 'unset' == identifier:
             logging.error('no process id set. set process id')
             return self
-
         for service in self.args.get('services'):
             self.emitter.emit(service,{'call':service,'id':'create-process'})
-
         deamons = ProcessDeamon().create()
         deamon = deamons.read(identifier)
         if None == deamon:
@@ -132,10 +134,10 @@ class ProcessEngine(object):
         deamon = deamons.read(identifier)
         if None == deamon:
             id = self.args.get('id')
-            logging.error("illegal %s process id. hells kitchen corrupt? call 'muk reset --only=%s'"%(id,id))
+            logging.error("illegal %s process id. hells kitchen corrupt? call 'kill -9 %s' and 'muk reset --only=%s'"%(id,self.pid,id))
             return self
         deamon['pid'] = 0
-        deamons.update(identifier,deamon).write()
+        deamons.update(identifier).write()
         self.flag = False
         # self.lock.set() # unlock thread
         from os import system
@@ -144,6 +146,7 @@ class ProcessEngine(object):
 
 class ProcessDeamon(object):
     def __init__(self):
+        self.events = {'on-deamon':self.on,'off-deamon':self.off}
         self.path = 'hells.kitchen'
         self.parser = None
         self.deamons = {}
@@ -191,6 +194,12 @@ class ProcessDeamon(object):
             self.parser['deamons'][key] = str(self.deamons.get(key))
         with open(self.path, 'w') as data:
             self.parser.write(data)
+
+    def on(self,data):
+        self.create().update(data.get('key'),data).write()
+
+    def off(self,data):
+        self.create().update(data.get('key')).write()
 
 class ProcessShell(object): # directly called from /bin/muk
     def __init__(self):
@@ -242,6 +251,7 @@ class ProcessShell(object): # directly called from /bin/muk
         for service in self.services:
             process = Popen(["pidof","python %s/start.py *"%service],stdout=PIPE,stdin=PIPE,stderr=PIPE)
             pid, err = process.communicate()
+        #    print process.stdout.read()
             logging.warning('not working correctly, out=%s err=%s'%(pid,err))
             if not '' == pid:
                 Popen(['kill','-9 %s'%pid])
@@ -262,13 +272,14 @@ class ProcessShell(object): # directly called from /bin/muk
             self.services = [service]
         else:
             lines = lines + ['\n Commands:\n'
-                            ,' help......................: '
-                            ,' kill [arguments]..........: '
-                            ,' restart [arguments].......: '
-                            ,' start [arguments].........: '
-                            ,' state [arguments].........: '
+                            ,' help......................: shows the application/a service help'
+                            ,' kill [arguments]..........: kills the application/a service'
+                            ,' restart [arguments].......: restarts the application/a service'
+                            ,' start [arguments].........: starts the application/a service'
+                            ,' state [arguments].........: show the current application/service state'
                             ,'\n Shell Options:\n'
-                            ,' [    | --only ]...........: ']
+                            ,' [    | --only ]...........: reduces command scope to a single service'
+                            ,'                             available services are : app and web']
         print '\n '.join(lines)
         from pydoc import locate
         for service in self.services:
@@ -277,36 +288,31 @@ class ProcessShell(object): # directly called from /bin/muk
 class ProcessArguments(object):
     def __init__(self):
         self.args = {'emitter':None}
-    #    self.events = {}
+        self.opts = []
         self.logOpt = {}
+        self.delivery = {'logger-options':self.logOpt}
 
     def decorate(self,arguments): # register new cmd line args
         return decorate(self,arguments)
 
     def create(self):
         self.emitter = self.args.get('emitter')
-
         del self.args['emitter']
         from sys import exit, argv
         from getopt import getopt, GetoptError
         try:
-            opts, args = getopt(argv[1:],shortopts=''.join(self.args.values()),longopts=self.args.keys())
-            for o, a in opts: # must be at the beginning of input
-                if '--verbose' == o:self.logOpt['level'] = a
-                elif '--logfile' == o:self.logOpt['path'] = a
-                elif '--noshell' == o:self.logOpt['shell'] = False
-
-                elif '--test' == o:print 'test test test'
-                # elif '--driver' == o:appOpts['driver'] = a
-            return self
+            self.opts, args = getopt(argv[1:],shortopts=''.join(self.args.values()),longopts=self.args.keys())
         except GetoptError as e:
             from logging import error
             error(e.msg)
             exit(2)
-
-    def logger(self):
-        return self.logOpt
+        for o, a in self.opts:
+            if '--verbose' == o:self.logOpt['level'] = a
+            elif '--logfile' == o:self.logOpt['path'] = a
+            elif '--noshell' == o:self.logOpt['shell'] = False
+        return self
 
     def deliver(self):
-        self.emitter.emit('logger-options',self.logOpt)
+        for event in self.delivery:
+            self.emitter.emit(event,self.delivery.get(event))
         return self

@@ -4,3 +4,5 @@
 *.kitchen
 
 store
+ssl/*.key
+ssl/*.crt

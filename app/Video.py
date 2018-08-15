@@ -273,8 +273,8 @@ class MjpegFileOut(MjpegStreamerUtil):
 # -------------------------------------------------------------------------------------------------
 class VideoStream(object):
     def __init__(self):
-        self.events = {'start-video':self.start,'kill-video':self.kill}
-        self.args = {'id':'video','label':'unset','in':'ucv','out':'http-out','deamon':True}
+        self.events = {'create-video':self.create,'kill-video':self.kill}
+        self.args = {'emitter':None,'id':'video','label':'unset','in':'ucv','out':'http-out','deamon':True}
         self.plugin = {'d':'unset','r':'unset','f':'unset'} # d /dev/video0
         self.plugout = {'w':'unset','p':'unset','c':'user:pass'}
         self.input = {'ucv':MjpegUvcIn,'ocv':MjpegOpencvIn,'rpi':MjpegRaspiCamIn}
@@ -284,6 +284,8 @@ class VideoStream(object):
         self.process = None
 
     def decorate(self,arguments):
+        if 'emitter' in arguments.keys():
+            arguments.get('emitter').attach(self.events)
         akeys = self.args.keys()
         ikeys = self.plugin.keys()
         okeys = self.plugout.keys()
@@ -296,9 +298,8 @@ class VideoStream(object):
                 self.plugout[key] = arguments[key]
         return self
 
-    def create(self,dispatcher):
-        dispatcher.attach(self.events)
-        self.emitter = dispatcher
+    def create(self,data={}):
+        self.emitter = self.args.get('emitter')
         try:
             if not None == self.process:
                 raise MjpegException(['alredy running, call kill before start'])
@@ -312,14 +313,6 @@ class VideoStream(object):
                 self.cmd.append('-b')
             if 'unset' == self.args.get('label'):
                 self.args['label'] = '%s-%s'%(self.args.get('in'),tmp)
-        except MjpegException as e:
-            logging.error(e.toString())
-        return self
-
-    def start(self,data={}):
-        try:
-            if not None == self.process:
-                raise MjpegException(['video stream is alredy running. call kill before start'])
             for val in self.cmd:
                 if(None == val or 'None' in val):
                     raise MjpegException(['illegal arguments. %s'%(str(self.cmd))])
@@ -327,9 +320,20 @@ class VideoStream(object):
             self.process = Popen(self.cmd,stdout=PIPE,stdin=PIPE,stderr=PIPE)
             logging.info('%s: %s video stream started from %s (pid=%s)'%(self.args.get('label'),self.args.get('out'),self.args.get('in'),self.process.pid+2))
             logging.info(self.process.stderr.read().replace('\n',''))
+            deamon = {'pid':self.process.pid+2,'host':'0','port':0}
             if 'http-out' == self.args.get('out'):
-                logging.info('access stream on port localhost:%s, %s'%(self.plugout.get('p'),self.plugout.get('c')))
-                self.emitter.emit('video-created',{'call':'video-created','id':'create-video','label':self.args.get('label'),'port':self.plugout.get('p'),'credentials':self.plugout.get('c')})
+                from netifaces import ifaddresses, AF_INET
+                host = str(ifaddresses('wlan0')[AF_INET][0]['addr'])
+                port = self.plugout.get('p')
+                deamon['host'] = host
+                deamon['port'] = port
+                logging.info('access stream on port %s:%s, %s'%(host,port,self.plugout.get('c')))
+                self.emitter.emit('video-created',{'call':'video-created','id':'create-video','label':self.args.get('label'),'port':port,'credentials':self.plugout.get('c')})
+            # add to hells kitchen
+            from Process import ProcessDeamon
+            ProcessDeamon().create().update(self.args.get('label'),deamon).write()
+            from time import sleep
+            sleep(0.1)
         except MjpegException as e:
             logging.error(e.toString())
         return self
@@ -344,17 +348,29 @@ class VideoStream(object):
             self.process.kill()
             self.process.terminate()
             self.process = None
+            # reset hells kitchen
+            from Process import ProcessDeamon
+            ProcessDeamon().create().update(self.args.get('label')).write()
             self.emitter.emit('video-killed',{'call':'video-killed','id':'kill-video','label':label})
         return self
 
 class Cameras(object):
     def __init__(self):
-        self.paths = {'web':'/dev/video0','front':'/dev/video2','back':'/dev/video4'}
-        self.ports = {'web':'8001','front':'8002','back':'8003'}
+        self.events = {'create-cameras':self.create,'kill-cameras':self.kill}
+        self.args = {'emitter':None}
+        from random import randint
+        self.paths = {'webcam':'/dev/video0'     ,'frontcam':'/dev/video2'     ,'backcam':'/dev/video4'}
+        self.ports = {'webcam':randint(8000,8079),'frontcam':randint(8000,8079),'backcam':randint(8000,8079)}
+        self.streams = []
 
     def decorate(self,arguments):
+        if 'emitter' in arguments.keys():
+            arguments.get('emitter').attach(self.events)
         keys = self.paths.keys()
+        akey = self.args.keys()
         for key in arguments.keys():
+            if key in akey:
+                self.args[key] = arguments[key]
             if key in keys:
                 rec = arguments.get(key)
                 tmp = rec.keys()
@@ -362,18 +378,22 @@ class Cameras(object):
                     self.ports[key] = rec['p']
                 if 'd' in tmp:
                     self.paths[key] = rec['d']
+        return self
 
-    def create(self,dispatcher):
+    def create(self,data={}):
         from glob import glob
         cams = glob('/dev/video*')
         keys = self.paths.keys()
         vals = self.paths.values()
         port = self.ports.values()
+        emit = self.args.get('emitter')
         for cam in cams:
             if cam in vals:
                 index = vals.index(cam)
-                VideoStream().decorate({'label':keys[index],'d':cam,'p':port[index]}).create(dispatcher)
-
+                self.streams.append(VideoStream().decorate({'emitter':emit,'label':keys[index],'d':cam,'p':port[index]}).create())
         return self
 
-
+    def kill(self,data={}):
+        for stream in self.streams:
+            stream.kill()
+        return self

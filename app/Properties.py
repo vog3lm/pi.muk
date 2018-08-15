@@ -1,7 +1,10 @@
-help = ['\n Application Options:\n'
-       ,' [ -h | --host ]..............: '
-       ,' [ -p | --port ]..............: '
-       ,' [    | --logfile ]...........: '
-       ,' [    | --noshell ]...........: '
-       ,' [    | --verbose ]...........: '
-       ,'']
+help = ["\n Application Options:\n"
+       ," [ -h | --host ]..............: sets a custom socket url,"
+       ,"                                default is 'localhost'"
+       ," [ -p | --port ]..............: sets a custom socket port,"
+       ,"                                default is '9001'"
+       ," [    | --logfile ]...........: creates a log file in 'pi.muk/logs/'"
+       ," [    | --noshell ]...........: hides shell outputs"
+       ," [    | --verbose ]...........: elects a log detail level"
+       ,"                                available levels: 0,10.20,30,40,50"
+       ,""]

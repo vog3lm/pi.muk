@@ -1,28 +1,66 @@
 #!/usr/bin/python
+import logging
+
+class VideoListener(object):
+    def __init__(self):
+        self.events = {'initialize-video':self.initialize}
+        self.emitter = None
+
+    def decorate(self,arguments):
+        if 'emitter' in arguments.keys():
+            self.emitter = arguments.get('emitter')
+            self.emitter.attach(self.events)            
+
+    def initialize(self,data):
+        logging.info('receive initialize-video from %s'%(data.get('host')))
+        data = {'call':'video-initialized','id':'initialize-video','namespace':'video'}
+        from Process import ProcessDeamon
+        deamons = ProcessDeamon().create().deamons
+        for key in deamons.keys():
+            if 'cam' in key:
+                camera = deamons.get(key)
+                if not '0' == camera.get('host') and not 0 == camera.get('port'):
+                    data[key] = {'url':'http://%s:%s/?action=stream'%(camera.get('host'),camera.get('port'))}
+        self.emitter.emit('push-sio',data)
+
 if __name__ == "__main__":
     from sys import exit, path
     path.append('share')
+    
     from Network import SocketServer, EventNetwork
     application = EventNetwork().decorate({'trace':True})
+    SocketServer().decorate({'emitter':application,'id':'web','port':9002,'deamon':True})
+    VideoListener().decorate({'emitter':application})
+    #########################
+    ###   load from cfg   ###
+    #########################
+    firebase = {
+        'emitter':application
+        ,'apiKey':'AIzaSyAKT0HPztHTdw5afMJABFkfZX_o3IvvuV8'
+        ,'authDomain':'jay-sidis.firebaseapp.com'
+        ,'databaseURL':'https://jay-sidis.firebaseio.com'
+        ,'projectId':'jay-sidis'
+        ,'storageBucket':'jay-sidis.appspot.com'
+        ,'messagingSenderId':'318401946624'
+        ,'mail':'vog3lm@p1.muK.de'
+        ,'pass':'44920420$Dollar'
+    }
+    #########################
+    ###   load from cfg   ###
+    #########################
+    from Firebase import Firebase
+    Firebase().decorate(firebase)
 
-    from Process import ProcessLogger, ProcessEngine, ProcessArguments
+    from Process import ProcessLogger, ProcessEngine
     logger = ProcessLogger().decorate({'emitter':application})
-    server = SocketServer().decorate({'emitter':application,'id':'web','port':9002,'deamon':True})
-    engine = ProcessEngine().decorate({'emitter':application,'id':'web'})
+    engine = ProcessEngine().decorate({'emitter':application,'id':'web','services':['create-socket','create-cgi','create-firebase']})
 
     from Cgi import Cgi, CgiSocket
     cgi = Cgi().decorate({'emitter':application,'logger':logger.logger})
-    CgiSocket().decorate({'emitter':application,'namespace':'muk'}).create(cgi.socket)
+    CgiSocket().decorate({'emitter':application,'namespace':'video'}).create(cgi.socket)
+    CgiSocket().decorate({'emitter':application,'namespace':'drive'}).create(cgi.socket)
 
-
-    ###
-    ProcessArguments().decorate({'emitter':application,'verbose=':'','logfile=':'','noshell':''}).create().deliver()
-    ###
-    logger.create() # call as service from engine
-
-    # application.emit('start-video',{})
-    # application.emit('start-gamepad',{})
-    cgi.create()
-    server.create()
+    from Options import Options
+    Options().decorate({'emitter':application}).create().deliver()
     engine.create()
     exit(0)

@@ -2,12 +2,13 @@ import logging
 
 class MouseDriver(object):
     def __init__(self):
-        self.events = {'start-mouse':self.create,'kill-mouse':self.kill}
+        self.args = {'emitter':None,'gpio':None}
+        self.events = {'create-mouse':self.create,'kill-mouse':self.kill,'gpio-created':self.decorate}
         self.name = 'mouse-driver'
         self.args = {'lib':'inputs'}
 
-    def create(self,dispatcher):
-        dispatcher.attach(self.events)
+    def create(self):
+        return self
 
     def inputs(self):
         pass
@@ -17,18 +18,15 @@ class MouseDriver(object):
 
 class KeyboardDriver(object):
     def __init__(self):
-        self.events = {'start-keyboard':self.create,'kill-keyboard':self.kill}
+        self.args = {'emitter':None,'gpio':None}
+        self.events = {'create-keyboard':self.create,'kill-keyboard':self.kill,'gpio-created':self.decorate}
         self.name = 'keyboard-driver'
         self.keymap = {}
         self.keys = []
         self.thread = None
         self.running = False
 
-    def create(self,dispatcher):
-        dispatcher.attach(self.events)
-        return self
-
-    def start(self):
+    def create(self,data={}):
         self.running = False
         from pynput.keyboard import Controller, Listener, Key, KeyCode
         Controller()
@@ -71,7 +69,7 @@ class KeyboardDriver(object):
                 self.keymap.get(key.char)(False)  
         return self.running
 
-    def kill(self,data=[]):
+    def kill(self,data={}):
         self.running = False
         return self
 
@@ -80,7 +78,7 @@ class KeyboardDriver(object):
 
 class GamepadDriver(object):
     def __init__(self):
-        self.args = {'gpio':None}
+        self.args = {'emitter':None,'gpio':None}
         self.events = {'start-gamepad':self.start,'kill-gamepad':self.kill,'gpio-created':self.decorate}
         self.name = 'gamepad-driver'
         self.keymap = {}
@@ -93,8 +91,7 @@ class GamepadDriver(object):
         from Util import decorate
         return decorate(self,arguments)
 
-    def create(self,dispatcher):
-        dispatcher.attach(self.events)
+    def create(self,data={}):
         self.running = False
         self.keymap = {'BTN_TL':self.accel_rev_left
                       ,'BTN_TR':self.accel_rev_right
@@ -111,9 +108,7 @@ class GamepadDriver(object):
         except IOError as e:
             self.gamepad = None
             logging.error('inputs missing. call pip install inputs')
-        return self
 
-    def start(self,data={}):
         errors = []
         if None == self.gamepad:
             errors.append('no gamepad hardware connected')

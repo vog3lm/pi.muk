@@ -1,5 +1,10 @@
-help = ['\n Common Gateway Interface Options:\n'
-       ,' [    | --logfile ]...........: '
-       ,' [    | --noshell ]...........: '
-       ,' [    | --verbose ]...........: '
-       ,'']
+help = ["\n Common Gateway Interface Options:\n"
+       ," [ -h | --gateway ]...........: sets a webserver socket url,"
+       ,"                                default is 'localhost:5000'"
+       ," [ -s | --socket ]............: sets a custom socket url,"
+       ,"                                default is 'localhost:9002'"
+       ," [    | --logfile ]...........: creates a log file in 'pi.muk/logs/'"
+       ," [    | --noshell ]...........: hides shell outputs"
+       ," [    | --verbose ]...........: elects a log detail level"
+       ,"                                available levels: 0,10.20,30,40,50"
+       ,""]
