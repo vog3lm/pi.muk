@@ -26,6 +26,7 @@ if __name__ == "__main__":
     # app
     install(['install','--upgrade','inputs'])
     install(['install','--upgrade','pynput'])
+    install(['install','--upgrade','netifaces'])
     # web
     install(['install','--upgrade','flask'])
     install(['install','--upgrade','flask-socketio'])
