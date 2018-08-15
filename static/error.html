@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+	<head>
+		<title>{{title}}</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<meta name="theme-color" content="#222222"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<link rel="shortcut icon" href="/static/images/fox.white.png" type="image/x-icon"/>
+		<link rel="icon" 		  href="/static/images/fox.white.png" type="image/x-icon"/>
+
+		<link rel="stylesheet" href="/static/css/font.awesome.min.css"/>
+		<link rel="stylesheet" href="/static/css/font.geometry.css"/>
+		<link rel="stylesheet" href="/static/css/design.geometry.css"/>
+		<link rel="stylesheet" href="/static/css/design.dark.css"/> <!-- load dynamically in backend.js:D3s1gn4p1Operator -->
+
+		<style type="text/css">
+			header img.after-emblem{
+				position:absolute;
+				height:5%;
+				bottom:17px;
+				left:7px;
+				filter:drop-shadow(0px 0px 7px white);
+			}
+			header section#content error{
+				position:absolute;
+				left:calc(50% + 21px);
+				top:calc(60% + 21px);
+				transform:translate(-50%,-50%);
+			    font-size: 7rem;
+			}
+			@media screen and (orientation:landscape){
+				header section#content img#muck {width:15%;}
+			}
+			@media screen and (orientation:portrait){
+				header section#content img#muck {width:70%;}
+			}
+			header section#content img#muck {
+				position:absolute;
+				top:50%;
+			    left:50%;
+			    transform:translate(-50%,-50%);
+		        filter:drop-shadow(0px 0px 50px white);
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<img class="after-effect" src="static/images/camo.poly.png" alt="after-effect"/>
+			<img class="after-emblem" src="static/images/fox.white.png" alt="after-emblem"/>
+			<section id="content">
+				<img id="muck" src="static/images/muck.white.png" alt="kleiner-muck"/>
+				{% block error %}{% endblock %}
+			</section>
+		</header>
+	</body>
+</html>

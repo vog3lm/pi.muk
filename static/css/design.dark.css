@@ -1,0 +1,29 @@
+/* Font and Color */
+body                { background:rgba(255,255,255,1); color:rgba(187,187,187,1); text-decoration:none; /*font-family:'mp-light', serif;*/ }
+a, h1, h2, h3,
+h4, h5, h6          { color:rgba(187,187,187,1); text-decoration:none; /*font-family:'mp-light', serif;*/ }
+footer a,
+footer input 		{ color:rgba(89,89,89,1); }
+
+input           		{ color:rgba(187,187,187,1); background:transparent; border:none; box-shadow:none; /*font-family:'mp-light', serif;*/ }
+input:focus     		{ border:none; outline:none !important; box-shadow:none; }
+
+::selection 		{ background:rgb(89,89,89); }
+::-moz-selection 	{ background:rgb(89,89,89); }
+
+body header{
+	background:rgba(89,89,89,1);
+}
+body footer{
+	background-color:rgba(255,255,255,1); 
+	color:rgba(89,89,89,1);
+}
+
+header a.fa-chevron-up,
+header a.fa-chevron-down{
+	color:rgba(187,187,187,1);
+}
+
+body overlay {
+    background: rgba(255,255,255,0.7);
+}

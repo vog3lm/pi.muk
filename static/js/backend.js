@@ -6,14 +6,18 @@ function Sock3tEv3ntD1spatch3r(ns){
 	events['connect-'+ns] = (data) => {
 		socketobj = io.connect(location.protocol+'//'+document.domain+':'+location.port+'/'+namespace);
         socketobj.on('connected', function(data) {
-            $('body').trigger(namespace+'-connected',data)  
+            $('body').trigger(namespace+'-connected',data);
         });
         socketobj.on('response', function(data) {
-            $('body').trigger(namespace+'-got',data)  
+            //$('body').trigger(namespace+'-got',data)  
+            $('body').trigger(data.data.call,data.data) ; 
         });
 	}
 	events['disconnect-'+ns] = (data) => {}
-	events['send-'+ns] = (data) => {socketobj.emit('request',Object.assign({},data, {'call':'request'}))}
+	events['send-'+ns] = (data) => {
+        if(null == socketobj){console.error(namespace,'socket not connected.','call','connect-'+namespace,'before sending messages.');}
+        else{socketobj.emit('request',Object.assign({},data, {'call':'request'}));}
+    }
 
 	this.create = function(dispatcher){
 		if(dispatcher){
@@ -81,11 +85,11 @@ function V13wEv3ntD1spatch3r(){
     function dispatch(evt,data){
         try {
 	    	if(events == null || issues == null){
-	    		throw 'view event dispachter not decorated. call onDecorate first!'
+	    		throw 'view event dispachter not decorated. call decorate/append first!'
 	    	}
             index = events.indexOf(evt.type)
             if(index < 0){
-                throw 'view event Intel not Found!'
+                throw 'view event intel not found!'
             }
             issues[index](data)
         } catch(error) {

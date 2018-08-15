@@ -1,0 +1,116 @@
+{% extends "index.html" %}
+{% block head %}
+	<script type="text/javascript">
+
+		function PageContentPresenter(){
+			this.login = {
+				'show':(views) => {
+					var tag = $('user');
+					tag.find('form').removeClass('hide');
+					var tmp = tag.find('a.fa-lock');
+					tmp.attr('call','hide');
+					tmp.attr('title','Hide Login');
+					tag.find('input#mail').focus();
+				}
+				,'hide':() => {
+					var tag = $('user');
+					tag.find('form').addClass('hide');
+					var tmp = tag.find('a.fa-lock');
+					tmp.attr('call','show');
+					tmp.attr('title','Show Login');
+				}
+				,'toggle':(views) => {
+					var tag = $('user')
+					if(tag.find('form').hasClass('hide')){
+						tag.find('form').removeClass('hide');
+						var element = tag.find('a.fa-lock');
+						element.attr('call','hide');
+						element.attr('title','Hide Login');
+					} else { // show
+						tag.find('form').addClass('hide');
+						var element = tag.find('a.fa-lock');
+						element.attr('call','show');
+						element.attr('title','Show Login');
+					}
+				}
+				,'clear':() => { // unused right now
+					var tag = $('user');
+					tag.find('card').addClass('hide');
+					tag.find('input#mail').val('');
+					tag.find('input#pass').val('');
+					tag.find('id').html('');
+				}
+			}
+		}
+
+		function PageEventListener(){
+			var presenter = new PageContentPresenter();
+			var events = {
+				'show':(data) => {presenter.login.show(data);}
+				,'hide':(data) => {presenter.login.hide(data);}
+				,'toggle':(data) => {presenter.login.toggle();}
+				,'validate':(data) => {
+					console.log({'mail':$('input#mail').val(),'pass':$('input#pass').val(),'call':'log-in','id':'validate'})
+					$('body').trigger('log-in',[{'mail':$('input#mail').val(),'pass':$('input#pass').val(),'call':'log-in','id':'validate'}]);
+				}
+			}
+			this.create = function(dispatcher){
+				if(dispatcher){
+					dispatcher.append({'events':Object.keys(events),'issues':Object.values(events)})
+				}
+			}	
+		}
+		
+		$(document).ready(function(){
+			new PageEventListener().create(dispatcher);
+		});
+		$(window).load(function() {
+			dispatcher.register().unleash();
+		});
+	</script>
+
+	<style type="text/css">
+		header section#content img#muck {
+			position:absolute;
+			top:50%;
+		    left:50%;
+		    transform:translate(-50%,-50%);
+	        filter:drop-shadow(0px 0px 50px white);
+		}
+		@media screen and (orientation:landscape){
+			header section#content img#muck {width:15%;}
+		}
+		@media screen and (orientation:portrait){
+			header section#content img#muck {width:70%;}
+		}
+		header img.after-emblem{
+			position:absolute;
+			height:5%;
+			bottom:17px;
+			right:7px;
+			filter:drop-shadow(0px 0px 7px white);
+		}
+	</style>
+{% endblock %}
+{% block body %}
+	<header>
+		<img class="after-effect" src="static/images/camo.poly.png" alt="after-effect"/>
+		<img class="after-emblem" src="static/images/fox.white.png" alt="after-emblem"/>
+		<section id="content">
+			<img id="muck" src="static/images/muck.white.png" alt="kleiner-muck">
+			<edge class="bl">
+				<user>
+					<a href="#" class="fa fa-1-25x fa-lock" call="show" title="Show Login"></a>
+					<card class='hide'>
+						<a href="#" class="fa fa-user" call="toggle" title="Show User Data"></a>
+						<id></id>
+					</card>
+					<form class="hide" call="validate">
+						<input type="text" id="mail" name="mail" placeholder="mail" value="" autocomplete="on">
+						<input type="password" id="pass" name="pass" placeholder="pass" value="" autocomplete="off">				
+					</form>
+				</user>
+			</edge>
+		</section>
+	</header>
+{% endblock %}

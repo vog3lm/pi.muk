@@ -1,2 +1,8 @@
-code: {{ code }}<br>name: {{ name }}<br>description: {{ description }}<br>
-message: {{ message }}<br>args: {{ args }}<br>response: {{ response }}
+{% extends "error.html" %}
+{% block error %}
+	<!--code: {{ code }}<br>name: {{ name }}<br>description: {{ description }}<br>
+		message: {{ message }}<br>args: {{ args }}<br>response: {{ response }}-->
+	<error>
+		{{ code }}-{{ name }}<br>{{ description }}
+	</error>
+{% endblock %}

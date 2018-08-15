@@ -1,0 +1,104 @@
+/* Geometry */
+* {margin: 0px;padding: 0px;}
+/* Geometry */
+html,body { position:fixed; height:100%; width:100%; padding:0px; margin:0px; overflow:hidden; -webkit-overflow-scrolling:hidden; }
+
+a    		 { display:block; height:32px; line-height:32px; }
+a.fa 		 { width:32px; line-height:32px; float:left; }
+a.fa-stack	 { width:32px; height:32px; }
+a.fa-stack i { padding-top:4px; padding-bottom:4px; }
+
+.hide {display:none;}
+
+
+body header{
+	overflow:hidden;
+	position:relative;
+	width:100%;
+	height:100%;
+}
+
+header img.after-effect,
+footer img.after-effect{
+	position:absolute;
+	width:100%;
+	height:100%;
+}
+
+header section#content{ /* main content container */
+    position: absolute;
+    overflow:hidden;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+
+header user{ /* user auth form */
+	height:32px;
+	width:100%;
+	overflow:hidden;
+}
+header user form,
+header user card{
+	display:inline-block;
+	width:calc(100% - 32px);
+	height:100%;
+	padding:0px;
+}
+header user form input{
+	height:32px;
+	width:50%;
+	line-height:32px;
+	vertical-align:middle;
+	float:left;
+}
+header user card id{
+	height:32px;
+	line-height:32px;
+	vertical-align:middle;
+	float:left;
+	overflow:hidden;
+}
+
+popup {	/* movie split to font... */
+	position:absolute;
+	left:50%;
+	top:50%;
+	transform:translate(-50%, -50%);
+	font-size:2rem;
+	padding:0.75em;
+	min-width:32px;
+    max-width:calc(100%);
+    min-height:32px;
+    max-height:calc(100%);
+    word-wrap:break-word;
+    overflow:auto;
+}
+
+overlay {
+	position:absolute;
+	width:100%;
+    height:100%;
+}
+
+edge{ /* commonize with header ui */
+	position:absolute;
+	display:inline-block;
+	min-width:32px;
+	height:32px;
+	line-height:32px;
+	z-index:1;
+}
+edge.hr{
+	top:0px;
+	right:0px;
+}
+edge.bl{
+	left:0px;
+	bottom:0px;
+}
+edge.br{
+	right:0px;
+	bottom:0px;
+}
