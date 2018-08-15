@@ -6,6 +6,90 @@ cd pi.muk
 python install.py
 ```
 
+To start the application enter `muk start` into your CLI. This will start all tier processes at once. To kill them all enter `muk kill`. 
+
+### Command Line
+
+```
+ Usage: muk [command] [options]
+ 
+ Commands:
+
+  help [arguments]..........: shows the application/a service help 
+  kill [arguments]..........: kills the application/a service
+  restart [arguments].......: restarts the application/a service
+  start [arguments].........: starts the application/a service
+  state [arguments].........: show the current application/service state
+ 
+ Shell Options:
+
+  [    | --only ]...........: reduces command scope to a single service
+                              available services are : app and web
+```
+
+```
+ Application Options:
+
+  [ -h | --host ]..............: sets a custom socket url,
+                                 default is 'localhost'
+  [ -p | --port ]..............: sets a custom socket port,
+                                 default is '9001'
+  [    | --logfile ]...........: creates a log file in 'pi.muk/logs/'
+  [    | --noshell ]...........: hides shell outputs
+  [    | --verbose ]...........: selects a log detail level 
+                                 available levels: 0,10.20,30,40,50
+```
+
+```
+ Common Gateway Interface Options:
+
+  [ -h | --gateway ]............: sets a webserver socket url,
+                                 default is 'localhost:5000'
+  [ -s | --socket ]............: sets a custom socket url,
+                                 default is 'localhost:9002'
+
+  [    | --logfile ]...........: creates a log file in the logfiles directory
+  [    | --noshell ]...........: hides shell outputs
+  [    | --verbose ]...........: selects a log detail level 
+                                 available levels: 0,10.20,30,40,50
+```
+
+### Features
+
+* auto install script
+* object decorator pattern
+* event driven programmflow
+* null state pattern
+* dynamic shell arg detection
+* dynamic dependency injection
+* three tier architecture
+  * web interface (realtime)
+  * device logics
+  * database
+* tls/ssl connections (external)
+* custom ssl certificates
+* web user interface
+* user authentication
+* login required watchdogs
+* usb device control options
+  * gamepad controller
+  * keyboard controller
+* remote device contorl options
+  * web interface controller
+  * gamepad controller
+  * keyboard controller
+* realtime video streaming
+* multiple camera support
+
+###### road map
+
+* autonomous driver
+* tls/ssl connections (internal)
+* device sensor phalanx
+* penetration testing toolkit
+* WhatsApp implementation ?
+* unit tests
+
 ### Hardware Setup
 
 * [Sinoning SN700 Tank Chassis](https://www.sinoning.com/collections/cheap-tank-chassis/products/cheap-small-smart-robot-tank-chassis-tracking-car-diy-for-arduino-scm-2)
@@ -13,10 +97,17 @@ python install.py
 * [Raspberry Pi Zero W (soldered)](https://shop.pimoroni.de/products/raspberry-pi-zero-w)
 * [Class 10 SD Card](https://www.ebay.de/itm/32GB-64GB-128GB-256GB-Samsung-EVO-Micro-SD-SDHC-SDXC-CLASS-10-Ori-Sye-/263637314053?var=)
 
+###### road map
 
-### Showcases
+* internal raspberry power supply
+* night vision camera kit
+* device sensor phalanx
+* 360 degree tower
 
-[Showcase Video 1](https://youtu.be/k85alXfrGNE)
 
+### Software Dependencies
 
+### The Project
+
+[Showcase Video 1](https://www.youtube.com/channel/UC8mzhI4oqa2SQDMScLVVmUw)
 
