@@ -36,14 +36,6 @@ if __name__ == "__main__":
     #########################
     firebase = {
         'emitter':application
-        ,'apiKey':'AIzaSyAKT0HPztHTdw5afMJABFkfZX_o3IvvuV8'
-        ,'authDomain':'jay-sidis.firebaseapp.com'
-        ,'databaseURL':'https://jay-sidis.firebaseio.com'
-        ,'projectId':'jay-sidis'
-        ,'storageBucket':'jay-sidis.appspot.com'
-        ,'messagingSenderId':'318401946624'
-        ,'mail':'vog3lm@p1.muK.de'
-        ,'pass':'44920420$Dollar'
     }
     #########################
     ###   load from cfg   ###
