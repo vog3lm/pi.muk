@@ -69,7 +69,7 @@ class EventNetwork(object):
 class SocketClient(object):
     def __init__(self):
         # blocking mode: timeout=None
-        self.args = {'host':'localhost','port':'unset','framesize':4096,'timeout':5,'payload':'large','deamon':False,'tls':False}
+        self.args = {'host':'localhost','port':None,'framesize':4096,'timeout':5,'payload':'large','deamon':False,'tls':False}
         self.sender = self.unsecure
         self.handler = self.large
 
@@ -94,6 +94,17 @@ class SocketClient(object):
             host = self.args.get('host')
         if(None == port):
             port = self.args.get('port')
+
+        errors = []
+        if(None == host or '0' == host):
+            errors.append('host error (%s)'%host)
+        if(None == port or 0 == host):
+            errors.append('port error (%s)'%port)
+
+        if 0 < len(errors):
+            logging.error('client send error. %s'%', '.join(errors))
+            return {'error':'client send error','errors':errors}
+
         from socket import timeout, gaierror, herror, error
         try:
             return self.sender(data,host,port)

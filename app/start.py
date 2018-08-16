@@ -7,8 +7,9 @@ if __name__ == "__main__":
     application = EventNetwork().decorate({'trace':True})
     server = SocketServer().decorate({'emitter':application,'id':'app','port':9001,'deamon':True})
 
-    from Driver import GamepadDriver
+    from Driver import GamepadDriver, RemoteDriver
 #    GamepadDriver().decorate({'emitter':application})
+    RemoteDriver().decorate({'emitter':application})
 
     from Video import Cameras
     Cameras().decorate({'emitter':application})
@@ -16,9 +17,12 @@ if __name__ == "__main__":
     from Gpio import Gpios
     Gpios().decorate({'emitter':application}) # .create().start()
 
+    from Firebase import FirebaseServer
+    server = FirebaseServer().decorate({'emitter':application}) #.create()
+
     from Process import ProcessLogger, ProcessEngine
     logger = ProcessLogger().decorate({'emitter':application})
-    engine = ProcessEngine().decorate({'emitter':application,'id':'app','services':['create-socket','create-gpio','create-cameras'] # 'create-driver'
+    engine = ProcessEngine().decorate({'emitter':application,'id':'app','services':['create-socket','create-gpio','create-cameras','create-firebase-server','create-remote-driver'] 
                                                                        ,'kills':['kill-gpio','kill-socket','kill-cameras']}) # 'kill-driver'
 
     from Options import Options

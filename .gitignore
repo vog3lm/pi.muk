@@ -3,6 +3,7 @@
 *.tmp
 *.cfg
 *.kitchen
+*.json
 
 store
 ssl/*.key

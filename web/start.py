@@ -23,6 +23,28 @@ class VideoListener(object):
                     data[key] = {'url':'http://%s:%s/?action=stream'%(camera.get('host'),camera.get('port'))}
         self.emitter.emit('push-sio',data)
 
+class DriveListener(object):
+    def __init__(self):
+        self.events = {'drive-remote':self.tunnel}
+        self.emitter = None
+        from Process import ProcessDeamon
+        deamon= ProcessDeamon().create().read('app')
+        from Network import SocketClient
+        self.client = SocketClient().decorate({'host':deamon.get('host'),'port':deamon.get('port'),'tls':False})
+
+    def decorate(self,arguments):
+        if 'emitter' in arguments.keys():
+            self.emitter = arguments.get('emitter')
+            self.emitter.attach(self.events)
+
+    def tunnel(self,data):
+        logging.warning('-----------------------------')
+        logging.warning(data)
+        logging.warning('tunnel to app with token')
+        logging.warning('-----------------------------')
+        self.client.send(data)
+
+
 if __name__ == "__main__":
     from sys import exit, path
     path.append('share')
@@ -31,21 +53,17 @@ if __name__ == "__main__":
     application = EventNetwork().decorate({'trace':True})
     SocketServer().decorate({'emitter':application,'id':'web','port':9002,'deamon':True})
     VideoListener().decorate({'emitter':application})
-    #########################
-    ###   load from cfg   ###
-    #########################
-    firebase = {
-        'emitter':application
-    }
-    #########################
-    ###   load from cfg   ###
-    #########################
-    from Firebase import Firebase
-    Firebase().decorate(firebase)
+    DriveListener().decorate({'emitter':application})
+
+    from Firebase import FirebaseClient # do in client later, send idToken to verfiy in wathdog.
+    FirebaseClient().decorate({'emitter':application}).configurate()
+
+    # from share.Firebase import FirebaseServer
+    # server = FirebaseServer().decorate({'emitter':application}) #.create()
 
     from Process import ProcessLogger, ProcessEngine
     logger = ProcessLogger().decorate({'emitter':application})
-    engine = ProcessEngine().decorate({'emitter':application,'id':'web','services':['create-socket','create-cgi','create-firebase']})
+    engine = ProcessEngine().decorate({'emitter':application,'id':'web','services':['create-socket','create-cgi','create-firebase-client','login-firebase-client']})
 
     from Cgi import Cgi, CgiSocket
     cgi = Cgi().decorate({'emitter':application,'logger':logger.logger})

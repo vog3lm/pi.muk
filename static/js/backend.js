@@ -87,11 +87,16 @@ function V13wEv3ntD1spatch3r(){
 	    	if(events == null || issues == null){
 	    		throw 'view event dispachter not decorated. call decorate/append first!'
 	    	}
-            index = events.indexOf(evt.type)
-            if(index < 0){
-                throw 'view event intel not found!'
+            for(var i=0;i<events.length;i++){
+                if(events[i] === evt.type){
+                    issues[i](data);
+                }
             }
-            issues[index](data)
+        //    index = events.indexOf(evt.type)
+        //    if(index < 0){
+        //        throw 'view event intel not found!'
+        //    }
+        //    issues[index](data)
         } catch(error) {
         	$('body').trigger('loading-stop');
             console.error(error)

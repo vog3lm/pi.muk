@@ -3,7 +3,7 @@ import logging
 class MouseDriver(object):
     def __init__(self):
         self.args = {'emitter':None,'gpio':None}
-        self.events = {'create-mouse':self.create,'kill-mouse':self.kill,'gpio-created':self.decorate}
+        self.events = {'create-mouse-driver':self.create,'kill-mouse-driver':self.kill,'gpio-created':self.decorate}
         self.name = 'mouse-driver'
         self.args = {'lib':'inputs'}
 
@@ -19,7 +19,7 @@ class MouseDriver(object):
 class KeyboardDriver(object):
     def __init__(self):
         self.args = {'emitter':None,'gpio':None}
-        self.events = {'create-keyboard':self.create,'kill-keyboard':self.kill,'gpio-created':self.decorate}
+        self.events = {'create-keyboard-driver':self.create,'kill-keyboard-driver':self.kill,'gpio-created':self.decorate}
         self.name = 'keyboard-driver'
         self.keymap = {}
         self.keys = []
@@ -79,16 +79,17 @@ class KeyboardDriver(object):
 class GamepadDriver(object):
     def __init__(self):
         self.args = {'emitter':None,'gpio':None}
-        self.events = {'start-gamepad':self.start,'kill-gamepad':self.kill,'gpio-created':self.decorate}
+        self.events = {'create-gamepad-driver':self.create,'kill-gamepad-driver':self.kill,'gpio-created':self.decorate}
         self.name = 'gamepad-driver'
         self.keymap = {}
         self.keys = []
         self.thread = None
         self.running = False
         self.gamepad = None
+        self.gpio = None
 
     def decorate(self,arguments):
-        from Util import decorate
+        from Process import decorate
         return decorate(self,arguments)
 
     def create(self,data={}):
@@ -113,7 +114,7 @@ class GamepadDriver(object):
         if None == self.gamepad:
             errors.append('no gamepad hardware connected')
         if None == self.args.get('gpio'):
-            logging.error('gamepad-driver has no gpio hardware interface')
+            errors.append('gamepad-driver has no gpio hardware interface')
         if 0 < len(errors):
             logging.error('gamepad-driver not startable.')
             logging.error(' '.join(errors))
@@ -135,9 +136,9 @@ class GamepadDriver(object):
         logging.debug('JOY_RX -> horizontal tower rotation')
         logging.debug('JOY_RY -> vertical tower rotation')
         logging.debug('JOY_RT -> canon shoot')
-        logging.debug('JOY_RX -> horizontal gimbal rotation')
-        logging.debug('JOY_RY -> vertical gimbal rotation')
-        logging.debug('JOY_RT -> gimbal camera snapshot')
+        logging.debug('JOY_LX -> horizontal gimbal rotation')
+        logging.debug('JOY_LY -> vertical gimbal rotation')
+        logging.debug('JOY_LT -> gimbal camera snapshot')
         return self
 
     def inputs(self):
@@ -227,5 +228,125 @@ class GamepadDriver(object):
     def gimbal_y(self,value):
         print 'gimbal move y %s'%(float(value-128)/128)
 
-    def dummy(self,value):
+    def shoot(self,value):
         print 'shoot'
+
+    def snapshot(self,value):
+        print 'shoot'
+
+class RemoteDriver(object):
+    def __init__(self):
+        self.args = {'emitter':None,'gpio':None}
+        self.events = {'create-remote-driver':self.create,'gpio-created':self.decorate,'drive-remote':self.handler}
+        self.name = 'remote-driver'
+        self.keymap = {}
+        self.keys = {}
+        self.gpio = None
+
+    def decorate(self,arguments):
+        from Process import decorate
+        return decorate(self,arguments)
+
+    def create(self,data={}):
+        self.keymap = {'L1':self.accel_rev_left
+                      ,'R1':self.accel_rev_right
+                      ,'L2':self.accel_fwd_left
+                      ,'R2':self.accel_fwd_right
+                      ,'TL':self.shoot
+                      ,'TR':self.snapshot
+                      ,'ABS_Z':self.tower_x
+                      ,'ABS_RZ':self.tower_y
+                      ,'ABS_X':self.gimbal_x
+                      ,'ABS_Y':self.gimbal_y}
+        self.keys = self.keymap.keys()
+
+        if None == self.args.get('gpio'):
+            logging.error('gamepad-driver not startable.')
+            logging.error('gamepad-driver has no gpio hardware interface')
+            return self
+        self.gpio = self.args.get('gpio')
+        self.gpio.setup(19,0,initial=0) # out:0|in:1
+        self.gpio.setup(26,0,initial=0)
+        self.gpio.setup(20,0,initial=0)
+        self.gpio.setup(21,0,initial=0)
+
+        logging.info('remote-driver has been started')
+        logging.debug('L1 -> accel rev left')
+        logging.debug('R1 -> accel rev right')
+        logging.debug('L2 -> accel fwd left')
+        logging.debug('L2 -> accel fwd right')
+        #logging.debug('RX -> horizontal tower rotation')
+        #logging.debug('RY -> vertical tower rotation')
+        logging.debug('RT -> canon shoot')
+        #logging.debug('LX -> horizontal gimbal rotation')
+        #logging.debug('LY -> vertical gimbal rotation')
+        logging.debug('LT -> gimbal camera snapshot')
+
+        return self
+
+    def handler(self,data):
+        if None == self.gpio:
+            logging.error('remote driver error. gpio not set')
+            return self
+        keys = data.keys()
+        if not 'key' in keys or not 'value' in keys:
+            logging.error('remote driver error. no key or value found')
+        key = data.get('key')
+        if key in self.keys:
+            self.keymap.get(key)(data.get('value'))
+        return self
+
+    # ---------------------------------------------------------------
+    # Rapsberry Pi 3/Zero BCM
+    # ---------------------------------------------------------------
+        #            +3V3 [ ] [ ] +5V
+        #               2 [ ] [ ] +5V
+        #               3 [ ] [ ] GND
+        #               4 [ ] [ ] 14
+        #             GND [ ] [ ] 15
+        #              17 [ ] [ ] 18
+        #              27 [ ] [ ] GND
+        #              22 [ ] [ ] 23
+        #            +3V3 [ ] [ ] 24
+        #              10 [ ] [ ] GND
+        #               9 [ ] [ ] 25
+        #              11 [ ] [ ]  8
+        #             GND [ ] [ ]  7
+        #               0 [ ] [ ]  1
+        #               5 [ ] [ ] GND
+        #               6 [ ] [ ] 12
+        #              13 [ ] [ ] GND
+        #    lr engine 19 [ ] [ ] 16
+        #    lf engine 26 [ ] [ ] 20 engine rr
+        #             GND [ ] [ ] 21 engine rf
+    # ---------------------------------------------------------------
+    def accel_fwd_left(self,value):
+        self.gpio.output(26,value)
+
+    def accel_fwd_right(self,value):
+        self.gpio.output(21,value)
+
+    def accel_rev_left(self,value):
+        self.gpio.output(19,value)
+
+    def accel_rev_right(self,value):
+        self.gpio.output(20,value)
+
+    def tower_x(self,value):
+        print 'gimbal move rotate %s'%(float(value-128)/128)
+
+    def tower_y(self,value):
+        print 'gimbal move up down %s'%(float(value-128)/128)
+
+    def gimbal_x(self,value):
+        print 'gimbal move x %s'%(float(value-128)/128)
+
+    def gimbal_y(self,value):
+        print 'gimbal move y %s'%(float(value-128)/128)
+
+    def shoot(self,value):
+        print 'shoot'
+
+    def snapshot(self,value):
+        print 'snapshot'
+

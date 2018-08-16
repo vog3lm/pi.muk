@@ -8,22 +8,23 @@
 
 		function Gamepad4p1Operator(){
 			const gamepad = new Gamepad();
-			var emitter = null;
+			var events = {
+				'drive-connected':(data) => {
+					console.log('drive connected')
+				}
+				,'drive-disconnected':(data) => {
+					console.log('drive disconnected')
+				}
+			}
 			this.create = function(dispatcher){
-				emitter = dispatcher;
+				if(dispatcher){
+					dispatcher.append({'events':Object.keys(events),'issues':Object.values(events)})
+				}
 				// gamepad.pause();
 				// gamepad.resume();
 				// gamepad.destroy();
 			}
-			/* gamepad buttons mapping *//*
-				
-
-			*/
-			const mapping = {'button_1':'a','button_2':'b','button_3':'x','button_4':'y'
-						  ,'shoulder_top_left':'L1','shoulder_top_right':'R1','shoulder_bottom_left':'L2','shoulder_bottom_right':'R2'}
-
 			this.start = function(){
-
 				gamepad.on('press','button_1',() => { /* A */
 				    console.log('a','was pressed!');
 				});
@@ -49,50 +50,63 @@
 				    console.log('Y','was released!');
 				});
 
+
+
 				gamepad.on('press','shoulder_top_left',() => { /* L1 */
-				    console.log('L1','was pressed!');
+				    console.log('L1','accel_rev_left!',1);
+				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'L1','value':1});
 				});
 				gamepad.on('release','shoulder_top_left',() => { /* L1 */
-				    console.log('L1','was released!');
+				    console.log('L1','accel_rev_left!',0);
+				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'L1','value':0});
 				});
 				gamepad.on('press','shoulder_top_right',() => { /* R1 */
-				    console.log('R1','was pressed!');
+				    console.log('R1','accel_rev_right!',1);
+				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'R1','value':1});
 				});
 				gamepad.on('release','shoulder_top_right',() => { /* R1 */
-				    console.log('R1','was released!');
+				    console.log('R1','accel_rev_right!',0);
+				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'R1','value':0});
 				});
 				gamepad.on('press','shoulder_bottom_left',() => { /* L2 */
-				    console.log('L2','was pressed!');
+				    console.log('L2','accel_fwd_left!',1);
+				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'L2','value':1});
 				});
-
 				gamepad.on('release','shoulder_bottom_left',() => { /* L2 */
-				    console.log('L2','was released!');
+				    console.log('L2','accel_fwd_left!',0);
+				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'L2','value':0});
 				});
 				gamepad.on('press','shoulder_bottom_right',() => { /* R2 */
-				    console.log('R2','was pressed!');
+				    console.log('R2','accel_fwd_right!',1);
+				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'R2','value':1});
 				});
 				gamepad.on('release','shoulder_bottom_right',() => { /* R2 */
-				    console.log('R2','was released!');
+				    console.log('R2','accel_fwd_right!',0);
+				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'R2','value':0});
 				});
+				//	gamepad.on('hold','shoulder_bottom_axis',(e) => { /* L2 *//* hold -> value */
+				//		/* 	is not used, drive or not drive */
+				//	    console.log('LR2','was hold!',e.value);
+				//	});
 
-			//	gamepad.on('hold','shoulder_bottom_axis',(e) => { /* L2 *//* hold -> value */
-			//		/* 	is not used, drive or not drive *//*
-			//			event issue value stucks on last recorded */
-			//	    console.log('LR2','was hold!',e.value);
-			//	});
+
 
 				gamepad.on('press','stick_button_left',() => { /* TL */
-				    console.log('TL','was pressed!');
+				    console.log('TL','was shoot!');
+				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'TL','value':1});
 				});
-				gamepad.on('release','stick_button_left',() => { /* TL */
-				    console.log('TL','was released!');
-				});
+				//	gamepad.on('release','stick_button_left',() => { /* TL */
+				//	    console.log('TL','was shoot!');
+				//	});
 				gamepad.on('press','stick_button_right',() => { /* TR */
-				    console.log('TR','was pressed!');
+				    console.log('TR','was snapshot!');
+				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'TR','value':1});
 				});
-				gamepad.on('release','stick_button_right',() => { /* TR */
-				    console.log('TR','was released!');
-				});
+				//	gamepad.on('release','stick_button_right',() => { /* TR */
+				//	    console.log('TR','was snapshot!');
+				//	});
+
+
 
 				gamepad.on('press','select',() => { /* select */
 				    console.log('select','was pressed!');
@@ -107,34 +121,36 @@
 				    console.log('start','was released!');
 				});
 
-			//	gamepad.on('press','stick_axis_left',() => { /* joysick left */
-			//	    console.log('stick_axis_left','was pressed!');
-			//	});
-			//	gamepad.on('release','stick_axis_left',() => { /* joysick left */
-			//	    console.log('stick_axis_left','was released!');
-			//	});
+
+
+				//	gamepad.on('press','stick_axis_left',() => { /* joysick left */
+				//	    console.log('stick_axis_left','was pressed!');
+				//	});
+				//	gamepad.on('release','stick_axis_left',() => { /* joysick left */
+				//	    console.log('stick_axis_left','was released!');
+				//	});
 				gamepad.on('hold','stick_axis_left',(e) => { /* joysick left */
 				    console.log('stick_axis_left','was hold!',e.value);
-				    // values : [-1,0] left
-				    //		  : [ 1,0] right
-				    //		  : [0,-1] up
-				    //		  : [0, 1] down
+				    // values : [-1,0] tower left
+				    //		  : [ 1,0] tower right
+				    //		  : [0,-1] tower up
+				    //		  : [0, 1] tower down
 				});
-
-
-			//	gamepad.on('press','stick_axis_right',() => { /* joystick right */
-			//	    console.log('stick_axis_right','was pressed!');
-			//	});
-			//	gamepad.on('release','stick_axis_right',() => { /* joystick right */
-			//	    console.log('stick_axis_right','was released!');
-			//	});
+				//	gamepad.on('press','stick_axis_right',() => { /* joystick right */
+				//	    console.log('stick_axis_right','was pressed!');
+				//	});
+				//	gamepad.on('release','stick_axis_right',() => { /* joystick right */
+				//	    console.log('stick_axis_right','was released!');
+				//	});
 				gamepad.on('hold','stick_axis_right',(e) => { /* joystick right */
 				    console.log('stick_axis_right','was hold!',e.value);
-				    // values : [-1,0] left
-				    //		  : [ 1,0] right
-				    //		  : [0,-1] up
-				    //		  : [0, 1] down
+				    // values : [-1,0] gimbal left
+				    //		  : [ 1,0] gimbal right
+				    //		  : [0,-1] gimbal up
+				    //		  : [0, 1] gimbal down
 				});
+
+
 
 				gamepad.on('hold','d_pad_axis',(e) => { /* hat/cross */
 				    console.log('d_pad_axis','was hold!',e.value);
@@ -145,7 +161,6 @@
 				});
 			}
 
-
 			gamepad.on('connect', e => {
 			    this.start();
 			});
@@ -153,8 +168,27 @@
 				console.log('disconnect',e)
 			    gamepad.off('press', 'button_1');
 			    gamepad.off('release', 'button_1');
-			});
+			    gamepad.off('press', 'button_2');
+			    gamepad.off('release', 'button_2');
+			    gamepad.off('press', 'button_3');
+			    gamepad.off('release', 'button_3');
+			    gamepad.off('press', 'button_4');
+			    gamepad.off('release', 'button_4');
 
+			    gamepad.off('press', 'shoulder_top_left');
+			    gamepad.off('release', 'shoulder_top_left');
+			    gamepad.off('press', 'shoulder_top_right');
+			    gamepad.off('release', 'shoulder_top_right');
+			    gamepad.off('press', 'shoulder_bottom_left');
+			    gamepad.off('release', 'shoulder_bottom_left');
+			    gamepad.off('press', 'shoulder_bottom_right');
+			    gamepad.off('release', 'shoulder_bottom_right');
+
+			    gamepad.off('press', 'stick_button_left');
+			    gamepad.off('release', 'stick_button_left');
+			    gamepad.off('press', 'stick_button_right');
+			    gamepad.off('release', 'stick_button_right');
+			});
 		}
 
 		function PageContentPresenter(){

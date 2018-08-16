@@ -9,35 +9,46 @@ class GpioException(Exception):
 class GpioDummy(object):
     def __init__(self):
         self.args = {'mode':'BCM'}
-        self.bcm = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0
+        self.bcm = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0 
                    ,11:0,12:0,13:0,14:0,15:0,16:0,17:0,18:0,19:0,20:0
-                   ,21:0,22:0,23:0,24:0,25:0,26:0,27:0}
-        self.setup = {}
-        self.board = {}
+                   ,21:0,22:0,23:0,24:0,25:0,26:0,27:0} # inital bcm gpio setting
+        self.board = {} # inital board gpio setting
         for key in range(0,40):
             self.board[key] = 0
-        self.mode = {}
+        self.setting = {}  # runtime gpio setting
+        self.mode = None
 
     def setmode(self,mode):
         if 'GPIO.BCM' == mode:
-            self.mode = self.bcm
+            self.setting = self.bcm
+            self.mode = mode
         elif 'GPIO.BOARD' == mode:
-            self.mode = self.board
+            self.setting = self.board
+            self.mode = mode
+        else:
+            self.setting = {}
+            self.mode = None
+
+    def getmode(self):
+        return self.mode
 
     def setwarnings(self,val):
+        logging.info('dummy gpio set warnings %s'%val)
         pass
 
     def setup(self,key,val,initial=0):
-        self.setup[key] = val
-        self.board[key] = initial
+        self.setting[key] = val
 
     def output(self,key,val):
-        self.mode[key] = val
+        self.setting[key] = val
+        logging.info('dummy gpio set %s to %s.'%(key,val))
 
     def input(self,key):
-        return self.mode[key]
+        return self.setting[key]
 
     def cleanup(self):
+        self.setmode(self.mode)
+        logging.info('dummy gpio cleaned up')
         pass
 
 # ---------------------------------------------------------------
@@ -107,9 +118,9 @@ class Gpios(object):
             logging.error('pi gpio import failed %s'%(str(e)))
             self.gpio = GpioDummy()
             self.gpio.setmode('GPIO.BCM')
-            logging.warning('pi gpio dummy initialized')
+            logging.warning('pi gpio dummy initialized in %s mode'%self.gpio.getmode())
         self.gpio.setwarnings(self.args.get('warn'))
-        logging.info('pi gpio initialized as BCM')
+        logging.info('pi gpio initialized as %s'%self.gpio.getmode())
         self.emitter.emit('gpio-created',{'id':'create-gpio','call':'gpio-created','gpio':self.gpio})
         return self
 
