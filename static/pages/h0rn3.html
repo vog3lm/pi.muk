@@ -1,0 +1,23 @@
+{% extends "index.html" %}
+{% block head %}
+	<script type="text/javascript">
+	</script>
+	<style type="text/css">
+		header img.after-emblem{
+			position:absolute;
+			height:5%;
+			bottom:17px;
+			left:7px;
+			filter:drop-shadow(0px 0px 7px white);
+		}
+	</style>
+{% endblock %}
+{% block body %}
+	<header>
+		<img class="after-effect" src="static/images/camo.poly.png" alt="after-effect"/>
+		<img class="after-emblem" src="static/images/fox.white.png" alt="after-emblem"/>
+		<section id="content">
+			Home
+		</section>
+	</header>
+{% endblock %}

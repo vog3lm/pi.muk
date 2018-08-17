@@ -3,193 +3,9 @@
 	<script type="text/javascript" src="/static/js/flask.sio.js"></script>
 	<script type="text/javascript" src="/static/js/gamepad.js"></script>
 
-
+	<script type="text/javascript" src="/static/js/hud.js"></script>
+	<script type="text/javascript" src="/static/js/drive.js"></script>
 	<script type="text/javascript">
-
-		function Gamepad4p1Operator(){
-			const gamepad = new Gamepad();
-			var events = {
-				'drive-connected':(data) => {
-					console.log('drive connected')
-				}
-				,'drive-disconnected':(data) => {
-					console.log('drive disconnected')
-				}
-			}
-			this.create = function(dispatcher){
-				if(dispatcher){
-					dispatcher.append({'events':Object.keys(events),'issues':Object.values(events)})
-				}
-				// gamepad.pause();
-				// gamepad.resume();
-				// gamepad.destroy();
-			}
-			this.start = function(){
-				gamepad.on('press','button_1',() => { /* A */
-				    console.log('a','was pressed!');
-				});
-				gamepad.on('release','button_1',() => { /* A */
-				    console.log('a','was released!');
-				});
-				gamepad.on('press','button_2',() => { /* B */
-				    console.log('b','was pressed!');
-				});
-				gamepad.on('release','button_2',() => { /* B */
-				    console.log('b','was released!');
-				});
-				gamepad.on('press','button_3',() => { /* X */
-				    console.log('x','was pressed!');
-				});
-				gamepad.on('release','button_3',() => { /* X */
-				    console.log('x','was released!');
-				});
-				gamepad.on('press','button_4',() => { /* Y */
-				    console.log('Y','was pressed!');
-				});
-				gamepad.on('release','button_4',() => { /* Y */
-				    console.log('Y','was released!');
-				});
-
-
-
-				gamepad.on('press','shoulder_top_left',() => { /* L1 */
-				    console.log('L1','accel_rev_left!',1);
-				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'L1','value':1});
-				});
-				gamepad.on('release','shoulder_top_left',() => { /* L1 */
-				    console.log('L1','accel_rev_left!',0);
-				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'L1','value':0});
-				});
-				gamepad.on('press','shoulder_top_right',() => { /* R1 */
-				    console.log('R1','accel_rev_right!',1);
-				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'R1','value':1});
-				});
-				gamepad.on('release','shoulder_top_right',() => { /* R1 */
-				    console.log('R1','accel_rev_right!',0);
-				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'R1','value':0});
-				});
-				gamepad.on('press','shoulder_bottom_left',() => { /* L2 */
-				    console.log('L2','accel_fwd_left!',1);
-				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'L2','value':1});
-				});
-				gamepad.on('release','shoulder_bottom_left',() => { /* L2 */
-				    console.log('L2','accel_fwd_left!',0);
-				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'L2','value':0});
-				});
-				gamepad.on('press','shoulder_bottom_right',() => { /* R2 */
-				    console.log('R2','accel_fwd_right!',1);
-				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'R2','value':1});
-				});
-				gamepad.on('release','shoulder_bottom_right',() => { /* R2 */
-				    console.log('R2','accel_fwd_right!',0);
-				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'R2','value':0});
-				});
-				//	gamepad.on('hold','shoulder_bottom_axis',(e) => { /* L2 *//* hold -> value */
-				//		/* 	is not used, drive or not drive */
-				//	    console.log('LR2','was hold!',e.value);
-				//	});
-
-
-
-				gamepad.on('press','stick_button_left',() => { /* TL */
-				    console.log('TL','was shoot!');
-				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'TL','value':1});
-				});
-				//	gamepad.on('release','stick_button_left',() => { /* TL */
-				//	    console.log('TL','was shoot!');
-				//	});
-				gamepad.on('press','stick_button_right',() => { /* TR */
-				    console.log('TR','was snapshot!');
-				    $('body').trigger('send-drive',{'call':'send-drive','id':'gamepad-tl','token':'idToken','request':'drive-remote','key':'TR','value':1});
-				});
-				//	gamepad.on('release','stick_button_right',() => { /* TR */
-				//	    console.log('TR','was snapshot!');
-				//	});
-
-
-
-				gamepad.on('press','select',() => { /* select */
-				    console.log('select','was pressed!');
-				});
-				gamepad.on('release','select',() => { /* select */
-				    console.log('select','was released!');
-				});
-				gamepad.on('press','start',() => { /* start */
-				    console.log('start','was pressed!');
-				});
-				gamepad.on('release','start',() => { /* start */
-				    console.log('start','was released!');
-				});
-
-
-
-				//	gamepad.on('press','stick_axis_left',() => { /* joysick left */
-				//	    console.log('stick_axis_left','was pressed!');
-				//	});
-				//	gamepad.on('release','stick_axis_left',() => { /* joysick left */
-				//	    console.log('stick_axis_left','was released!');
-				//	});
-				gamepad.on('hold','stick_axis_left',(e) => { /* joysick left */
-				    console.log('stick_axis_left','was hold!',e.value);
-				    // values : [-1,0] tower left
-				    //		  : [ 1,0] tower right
-				    //		  : [0,-1] tower up
-				    //		  : [0, 1] tower down
-				});
-				//	gamepad.on('press','stick_axis_right',() => { /* joystick right */
-				//	    console.log('stick_axis_right','was pressed!');
-				//	});
-				//	gamepad.on('release','stick_axis_right',() => { /* joystick right */
-				//	    console.log('stick_axis_right','was released!');
-				//	});
-				gamepad.on('hold','stick_axis_right',(e) => { /* joystick right */
-				    console.log('stick_axis_right','was hold!',e.value);
-				    // values : [-1,0] gimbal left
-				    //		  : [ 1,0] gimbal right
-				    //		  : [0,-1] gimbal up
-				    //		  : [0, 1] gimbal down
-				});
-
-
-
-				gamepad.on('hold','d_pad_axis',(e) => { /* hat/cross */
-				    console.log('d_pad_axis','was hold!',e.value);
-				    // values : [-1,0] left
-				    //		  : [ 1,0] right
-				    //		  : [0,-1] up
-				    //		  : [0, 1] down
-				});
-			}
-
-			gamepad.on('connect', e => {
-			    this.start();
-			});
-			gamepad.on('disconnect', e => {
-				console.log('disconnect',e)
-			    gamepad.off('press', 'button_1');
-			    gamepad.off('release', 'button_1');
-			    gamepad.off('press', 'button_2');
-			    gamepad.off('release', 'button_2');
-			    gamepad.off('press', 'button_3');
-			    gamepad.off('release', 'button_3');
-			    gamepad.off('press', 'button_4');
-			    gamepad.off('release', 'button_4');
-
-			    gamepad.off('press', 'shoulder_top_left');
-			    gamepad.off('release', 'shoulder_top_left');
-			    gamepad.off('press', 'shoulder_top_right');
-			    gamepad.off('release', 'shoulder_top_right');
-			    gamepad.off('press', 'shoulder_bottom_left');
-			    gamepad.off('release', 'shoulder_bottom_left');
-			    gamepad.off('press', 'shoulder_bottom_right');
-			    gamepad.off('release', 'shoulder_bottom_right');
-
-			    gamepad.off('press', 'stick_button_left');
-			    gamepad.off('release', 'stick_button_left');
-			    gamepad.off('press', 'stick_button_right');
-			    gamepad.off('release', 'stick_button_right');
-			});
-		}
 
 		function PageContentPresenter(){
 		}
@@ -202,6 +18,7 @@
 					$('controls a#video-control').css({'color':'rgb(187,187,187)','filter':'drop-shadow(0px 0px 5px white)'});
 				}
 				,'video-initialized':(data) => {
+					console.log(data)
 					if(data.hasOwnProperty('frontcam')){
 						$('header img#main-stream').attr('src',data.frontcam.url);
 						$('popup').addClass('hide');
@@ -212,10 +29,21 @@
 						stream.removeClass('hide');
 						$('header mirror a').addClass('hide');
 					}
-					
 				}
 				,'video-disconnected':(data) => {
 					$('controls a#video-control').css({'color':'rgb(255,0,170)','filter':'drop-shadow(0px 0px 5px rgb(255,0,170))'});
+				}
+				,'switch-cameras':(data) => {
+			    	var mirror = $('mirror img');
+			    	var main = $('header img#main-stream');
+			    	var tmp = mirror.attr('src');
+			    	mirror.attr('src',main.attr('src'));
+			    	main.attr('src',tmp);
+				}
+				,'toggle-mirror':(data) => {
+			    	var element = $('mirror');
+			    	if(element.hasClass('hide')){element.removeClass('hide');}
+			    	else{element.addClass('hide');}
 				}
 
 				,'drive-connected':(data) => {
@@ -235,6 +63,15 @@
 					}
 				}
 
+
+				,'switch-hud-if':(data) => {
+					console.log('page swicht hud if');
+				}
+				,'tint-interface':(data) => {
+					var colors = ['#FFFFFF','#000000','00FF88','#FF0097','#00FF00','#0000FF','#FF0000'];
+					var color = Math.floor(Math.random()*5)+0 ;
+					$('body').trigger('tint-hud-if',{'call':'tint-hud-if','id':'tint-interface','color':colors[color]})
+				}
 				,'toggle-color':(data) => {
 					var element = $('controls a#color-control');
 					if(element.hasClass('light')){
@@ -255,7 +92,8 @@
 			new PageEventListener().create(dispatcher);
 			new Sock3tEv3ntD1spatch3r('video').create(dispatcher);
 			new Sock3tEv3ntD1spatch3r('drive').create(dispatcher);
-			new Gamepad4p1Operator().create(dispatcher);
+			new Drive4p1Operator().decorate({'driver':'gamepad'}).create(dispatcher);
+			new HudInterfaceHolder().operator.decorate({'lineColor':'#FFFFFF','lineWidth':'4px','paneParent':'content','paneId':'hud-if'}).create(dispatcher).start();
 		});
 		$(window).load(function() {
 			dispatcher.register().unleash();
@@ -308,28 +146,30 @@
 	</style>
 {% endblock %}
 {% block body %}
-	<header>
+	<header id="zone">
 		<img class="after-effect" src="static/images/camo.poly.png" id="main-stream" alt="main-stream"/>
 		<img class="after-emblem" src="static/images/fox.white.png" alt="after-emblem"/>
 		<section id="content">
-			<compass>
+		<!--	<compass>
 				compass mitte oben
-			</compass>
+		-->	</compass>
 			<mirror>
 				<a href="" src="" call="" class="fa fa-exclamation-triangle" title="no backcam found"></a>
 				<img src="" class="hide" id="mirror-stream" alt="mirror-stream"/>
 			</mirror>
-			<map id="map">
+		<!--	<map id="map">
 				karte links oben
-			</map>
-			<canvas> aim
+		-->	</map>
+		<!--	<canvas> aim
 				visier kommt hier, attack, observate, minimal
 				device monitor integriert
 			</canvas>
-			<controls>
+		-->	<controls>
+				<a href="#" id="drive-control" class="fa fa-1-25x fa-wifi sioc"></a>
+				<a href="#" id="video-control" class="fa fa-1-25x fa-video-camera sioc"></a>
 				<a href="#" id="drive-control" call="toggle-drive" class="fa fa-1-5x fa-gamepad sioc"></a>
-				<a href="#" id="video-control" call="video-connected" class="fa fa-1-25x fa-video-camera sioc"></a>
-				<a href="#" id="color-control" call="toggle-color" class="fa fa-1-5x fa-tint light"></a>
+				<a href="#" id="color-control" call="switch-hud-if" class="fa fa-1-5x fa-eye light"></a>
+				<a href="#" id="color-control" call="tint-interface" class="fa fa-1-5x fa-tint light"></a>
 			</controls>
 		</section>
 		<popup>

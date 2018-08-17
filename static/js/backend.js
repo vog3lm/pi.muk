@@ -47,8 +47,15 @@ function V13wEv3ntD1spatch3r(){
     		throw 'view event dispachter not decorated. call onDecorate/onAppend first!'
     		return this;
     	}
-		for (var i=0; i<events.length; i++) {
-            $('body').on(events[i],dispatch);
+        var registered = [];
+		for (var i=0; i<events.length; i++){
+            /* register events only one time! */
+            if(!registered.includes(events[i])){
+                var evt = events[i];
+                $('body').on(evt,dispatch);
+                registered.push(evt);
+            }
+            
         };
         return this;
     }
