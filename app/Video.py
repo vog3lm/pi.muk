@@ -218,10 +218,13 @@ class MjpegHttpOut(MjpegStreamerUtil):
     def __init__(self):
         super(MjpegHttpOut,self).__init__()
         self.name = 'http-out'
-        self.args.update({'o':'/usr/local/lib/output_http.so','p':'8080','c':'unset','w':'/root/pi.stalker/static/mjpg'})
+        self.args.update({'o':'/usr/local/lib/output_http.so','p':'8080','c':None,'w':'/root/pi.stalker/static/mjpg'})
     def get(self):
         self.validate()
-        return '%s -w %s -p %s -c %s '%(self.args.get('o'),self.args.get('w'),self.args.get('p'),self.args.get('c'))
+        tmp = '%s -w %s -p %s'%(self.args.get('o'),self.args.get('w'),self.args.get('p'))
+        if not None == self.args.get('c'):
+            tmp = '%s -c %s'%(tmp,self.args.get('c'))
+        return tmp
 
 # --- https://github.com/jacksonliam/mjpg-streamer/blob/master/mjpg-streamer-experimental/plugins/output_viewer/README.md
 # /usr/local/lib/output_viewer.so
@@ -276,7 +279,7 @@ class VideoStream(object):
         self.events = {'create-video':self.create,'kill-video':self.kill}
         self.args = {'emitter':None,'id':'video','label':'unset','in':'ucv','out':'http-out','deamon':True}
         self.plugin = {'d':'unset','r':'unset','f':'unset'} # d /dev/video0
-        self.plugout = {'w':'unset','p':'unset','c':'user:pass'}
+        self.plugout = {'w':'unset','p':'unset','c':None} # 'user:pass'
         self.input = {'ucv':MjpegUvcIn,'ocv':MjpegOpencvIn,'rpi':MjpegRaspiCamIn}
         self.output = {'http-out':MjpegHttpOut,'viewer':MjpegViewerOut}
         self.cmd = ['mjpg_streamer','-i',None,'-o',None]

@@ -84,16 +84,16 @@ class CgiErrors(object):
 class CgiRoutes(object):
     def __init__(self):
         self.events = {}
-        self.args = {'index':'index.html','path':'pages','watchdog':'custom'}
+        self.args = {'index':'h0rn3.html','path':'pages','watchdog':'custom'}
         # do routes from cfg
             # [routes]
             # index = {'f':'index','method':['GET'],secure:False}
             # 70g1n = {'f':'login','method':['GET'],secure:False}
             # 4Dm1n = {'f':'admin','method':['GET'],secure:True}
             # d21v3 = {'f':'drive','method':['GET'],secure:True}
-        self.routes = {'/':self.index ,'/70g1n':self.login ,'/4Dm1n':self.admin ,'/d21v3':self.drive}
-        self.method = {'/':['GET']    ,'/70g1n':['GET']    ,'/4Dm1n':['GET']    ,'/d21v3':['GET']}
-        self.secure = {'/':False      ,'/70g1n':False      ,'/4Dm1n':True       ,'/d21v3':False}
+        self.routes = {'/':self.index ,'/h0rn3':self.index ,'/70g1n':self.login ,'/4Dm1n':self.admin ,'/d21v3':self.drive}
+        self.method = {'/':['GET']    ,'/h0rn3':['GET']    ,'/70g1n':['GET']    ,'/4Dm1n':['GET']    ,'/d21v3':['GET']}
+        self.secure = {'/':False      ,'/h0rn3':False      ,'/70g1n':False      ,'/4Dm1n':True       ,'/d21v3':False}
         self.index = None
         self.watchdogs = CgiWatchdogs().watchdogs
 
@@ -170,7 +170,7 @@ class Cgi(object):
     def __init__(self,folder='%s/static'%getcwd()):
         self.events = {'push-sio':self.push,'create-cgi':self.create,'cgi-options':self.decorate}
         self.args = {'emitter':None,'host':'0.0.0.0','port':5000,'logger':None,'debug':False,'deamon':True
-                    ,'key':'ssl/host.key','crt':'ssl/host.crt'}
+                    ,'key':'ssl/host.key','crt':'ssl/host.crt','env':'production'}
         from flask import Flask
         self.cgi = Flask(__name__,template_folder=folder,static_folder=folder)
         from flask_socketio import SocketIO
@@ -186,7 +186,7 @@ class Cgi(object):
         for i, page in enumerate(pages):
             pages[i] = int(page.replace(path,'').replace('.html',''))
         CgiErrors().decorate({'errors':pages}).create(self.cgi)
-        CgiRoutes().decorate({'index':'4Dm1n.html','watchdog':'firebase'}).create(self.cgi)
+        CgiRoutes().decorate({'watchdog':'firebase'}).create(self.cgi)
 
 
     def decorate(self,arguments):
@@ -197,7 +197,7 @@ class Cgi(object):
         self.cgi.config['HOST'] = self.args.get('host')
         self.cgi.config['PORT'] = self.args.get('port')
         self.cgi.config['DEBUG'] = self.args.get('debug')
-        self.cgi.config['ENV'] = 'development' # production|development
+        self.cgi.config['ENV'] = self.args.get('env') # production|development
         if not None == self.args.get('logger'):
             # self.cgi.logger = self.args.get('logger') # error can't set attribute
             if(0 < len(self.cgi.logger.handlers)):
@@ -210,7 +210,7 @@ class Cgi(object):
         return self
 
     def start(self):
-        self.cgi.run(ssl_context=(self.args.get('crt'),self.args.get('key')))
+        self.cgi.run(host=self.args.get('host'),ssl_context=(self.args.get('crt'),self.args.get('key')))
         return self
 
     def error(self,error):

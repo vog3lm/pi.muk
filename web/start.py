@@ -66,7 +66,7 @@ if __name__ == "__main__":
     engine = ProcessEngine().decorate({'emitter':application,'id':'web','services':['create-socket','create-cgi','create-firebase-client','login-firebase-client']})
 
     from Cgi import Cgi, CgiSocket
-    cgi = Cgi().decorate({'emitter':application,'logger':logger.logger})
+    cgi = Cgi().decorate({'emitter':application,'logger':logger.logger,'env':'development'})
     CgiSocket().decorate({'emitter':application,'namespace':'video'}).create(cgi.socket)
     CgiSocket().decorate({'emitter':application,'namespace':'drive'}).create(cgi.socket)
 
