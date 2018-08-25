@@ -128,7 +128,7 @@ class GamepadDriver(object):
         self.thread = Thread(target=self.inputs)
         self.thread.setDaemon(True) # self.args.get('deamon')
         self.thread.start()
-        logging.info('gamepad-driver has been started')
+        logging.debug('gamepad-driver has been started')
         logging.debug('BTN_L1 -> accel rev left')
         logging.debug('BTN_R1 -> accel rev right')
         logging.debug('BTN_L2 -> accel fwd left')
@@ -170,7 +170,7 @@ class GamepadDriver(object):
                     # ABS_SELECT == select
                     # ABS_START == start
                 self.running = self.handler(event.code,event.state)
-        logging.info('gampad driver has been stopped')
+        logging.debug('gampad driver has been stopped')
 
     def kill(self,data={}):
         self.running = False
@@ -270,7 +270,7 @@ class RemoteDriver(object):
         self.gpio.setup(20,0,initial=0)
         self.gpio.setup(21,0,initial=0)
 
-        logging.info('remote-driver has been started')
+        logging.debug('remote-driver has been started')
         logging.debug('L1 -> accel rev left')
         logging.debug('R1 -> accel rev right')
         logging.debug('L2 -> accel fwd left')

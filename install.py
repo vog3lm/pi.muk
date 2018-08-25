@@ -76,28 +76,8 @@ if __name__ == "__main__":
         ,"chdir('%s')\n"%getcwd()
         ,"from sys import path, argv, exit\n"
         ,"path.append('%s')\n"%getcwd()
-        ,"command = argv[1]\n"
-        ,"service = 'all'\n"
-        ,"for i in argv[1:]:\n"
-        ,"    if '--only' in i:\n"
-        ,"        service = i[7:]\n"
-        ,"        argv.remove(i)\n"
-        ,"        break\n"
         ,"from share.Process import ProcessShell\n"
-        ,"if 'start' == command:\n"
-        ,"    ProcessShell().start(service,argv[2:])\n"
-        ,"elif 'restart' == command:\n"
-        ,"    ProcessShell().restart(service)\n"
-        ,"elif 'kill' == command:\n"
-        ,"    ProcessShell().kill(service)\n"
-        ,"elif 'reset' == command:\n"
-        ,"    ProcessShell().reset(service)\n"
-        ,"elif 'state' == command:\n"
-        ,"    ProcessShell().state(service)\n"
-        ,"elif 'help' == command:\n"
-        ,"    ProcessShell().help(service)\n"
-        ,"else:\n"
-        ,"    print \"%s is unknown. call 'muk help' for MORE information.\"%command\n"
+        ,"ProcessShell(argv)\n"
         ,"exit(0)"]
     create(fn,lines)
     check(fn,'shell environment variable')

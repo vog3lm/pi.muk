@@ -120,7 +120,7 @@ class Gpios(object):
             self.gpio.setmode('GPIO.BCM')
             logging.warning('pi gpio dummy initialized in %s mode'%self.gpio.getmode())
         self.gpio.setwarnings(self.args.get('warn'))
-        logging.info('pi gpio initialized as %s'%self.gpio.getmode())
+        logging.debug('pi gpio initialized as %s'%self.gpio.getmode())
         self.emitter.emit('gpio-created',{'id':'create-gpio','call':'gpio-created','gpio':self.gpio})
         return self
 
@@ -135,7 +135,7 @@ class Gpios(object):
 
     def kill(self,data={}):
         self.gpio.cleanup()
-        logging.info('gpios cleaned.')
+        logging.debug('gpios cleaned.')
         self.emitter.emit('gpio-killed',{'id':'kill-gpio','call':'gpio-killed'})
         return self
 

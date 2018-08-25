@@ -89,7 +89,7 @@ class FirebaseClient(object):
         # storage.child("images/example.jpg").download("downloaded.jpg")
         # storage.child("images/example.jpg").get_url()
 
-        logging.info('firebase created for %s'%self.args.get('authDomain'))
+        logging.debug('firebase created for %s'%self.args.get('authDomain'))
         return self
 
     def login(self,data={}):
@@ -115,13 +115,13 @@ class FirebaseClient(object):
 
         from requests.exceptions import HTTPError
         try:
-            logging.info('%s logs in to %s.'%(mail,self.args.get('authDomain')))
+            logging.debug('%s logs in to %s.'%(mail,self.args.get('authDomain')))
             user = self.auth.sign_in_with_email_and_password(mail,password)
             self.args['user'] = user
             self.auth.refresh(user['refreshToken']).get('idToken') # force token refresh, expires after 1 hour
             self.args['token'] = user.get('idToken')
             self.args['uid'] = user.get('localId')
-            logging.info('%s logged in to %s.'%(mail,self.args.get('authDomain')))
+            logging.debug('%s logged in to %s.'%(mail,self.args.get('authDomain')))
             # self.auth.get_account_info(self.args.get('token'))
 
         except HTTPError as e:
@@ -131,7 +131,7 @@ class FirebaseClient(object):
         return self
 
     def logout(self,data={}):
-        logging.info('%s logged out from %s.'%(mail,self.args.get('authDomain')))
+        logging.debug('%s logged out from %s.'%(mail,self.args.get('authDomain')))
         return self
 
 class FirebaseServer(object):

@@ -118,6 +118,7 @@ class SocketClient(object):
             logging.error('client default error! client kill forced! %s:%s %s'%(host,port,msg))
 
     def unsecure(self,data,host=None,port=None):
+        logging.warning('tls not active. unsecure client socket.')
         from socket import socket
         from json import dumps
         client = socket()
@@ -218,7 +219,7 @@ class SocketServer(object):
             deamons.update(identifier,deamon).write()
             from time import sleep
             sleep(0.1)
-            logging.info('%s socket created on %s:%s'%(self.args.get('id'),host,port))
+            logging.debug('%s socket created on %s:%s'%(self.args.get('id'),host,port))
             from threading import Thread
             self.thread = Thread(target=self.listen)
             # self.thread = threading.Thread(target=self.listen,args=[server,receive,sender])
@@ -236,15 +237,16 @@ class SocketServer(object):
         return self
 
     def listen(self):
-        logging.info('%s socket listening on %s:%s'%(self.args.get('id'),self.args.get('host'),self.args.get('port')))
+        logging.debug('%s socket listening on %s:%s'%(self.args.get('id'),self.args.get('host'),self.args.get('port')))
         self.listening = True
         self.listener()
 
     def unsecure(self):
+        logging.warning('tls not active. unsecure server socket.')
         from ast import literal_eval
         while self.listening:
             connection, client = self.server.accept()
-            logging.info("socket event on %s:%s"%(self.args.get('host'),self.args.get('port')))
+            logging.debug("socket event on %s:%s"%(self.args.get('host'),self.args.get('port')))
             string = self.handler(connection)
             nto = literal_eval(string)
             logging.debug("received event data: %s"%nto)
@@ -258,7 +260,7 @@ class SocketServer(object):
             # data = stream.read()
             # connstream.shutdown(socket.SHUT_RDWR)
             # connstream.close()
-            logging.info("socket event on %s:%s"%(self.args.get('host'),self.args.get('port')))
+            logging.debug("socket event on %s:%s"%(self.args.get('host'),self.args.get('port')))
             string = self.handler(connection)
             nto = literal_eval(string)
             logging.debug("received event data: %s"%nto)
@@ -277,7 +279,7 @@ class SocketServer(object):
         deamon['host'] = "0"
         deamon['port'] = 0
         deamons.update(identifier,deamon).write()
-        logging.info('%s socket on %s:%s stopped'%(self.args.get('id'),self.args.get('host'),self.args.get('port')))
+        logging.debug('%s socket on %s:%s stopped'%(self.args.get('id'),self.args.get('host'),self.args.get('port')))
         return self
 
     def small(self,c): # small payload

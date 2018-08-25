@@ -321,8 +321,8 @@ class VideoStream(object):
                     raise MjpegException(['illegal arguments. %s'%(str(self.cmd))])
             from subprocess import Popen, PIPE
             self.process = Popen(self.cmd,stdout=PIPE,stdin=PIPE,stderr=PIPE)
-            logging.info('%s: %s video stream started from %s (pid=%s)'%(self.args.get('label'),self.args.get('out'),self.args.get('in'),self.process.pid+2))
-            logging.info(self.process.stderr.read().replace('\n',''))
+            logging.debug('%s: %s video stream started from %s (pid=%s)'%(self.args.get('label'),self.args.get('out'),self.args.get('in'),self.process.pid+2))
+            logging.debug(self.process.stderr.read().replace('\n',''))
             deamon = {'pid':self.process.pid+2,'host':'0','port':0}
             if 'http-out' == self.args.get('out'):
                 from netifaces import ifaddresses, AF_INET
@@ -330,7 +330,7 @@ class VideoStream(object):
                 port = self.plugout.get('p')
                 deamon['host'] = host
                 deamon['port'] = port
-                logging.info('access stream on port %s:%s, %s'%(host,port,self.plugout.get('c')))
+                logging.debug('access stream on port %s:%s, %s'%(host,port,self.plugout.get('c')))
                 self.emitter.emit('video-created',{'call':'video-created','id':'create-video','label':self.args.get('label'),'port':port,'credentials':self.plugout.get('c')})
             # add to hells kitchen
             from Process import ProcessDeamon
@@ -347,7 +347,7 @@ class VideoStream(object):
             label = self.args.get('label')
             from os import system
             system('kill -9 %s'%(pid))
-            logging.info('%s to %s video stream %s (%s) stopped'%(self.args.get('out'),self.args.get('in'),label,pid))
+            logging.debug('%s to %s video stream %s (%s) stopped'%(self.args.get('out'),self.args.get('in'),label,pid))
             self.process.kill()
             self.process.terminate()
             self.process = None
@@ -362,8 +362,9 @@ class Cameras(object):
         self.events = {'create-cameras':self.create,'kill-cameras':self.kill}
         self.args = {'emitter':None}
         from random import randint
-        self.paths = {'webcam':'/dev/video0'     ,'frontcam':'/dev/video2'     ,'backcam':'/dev/video4'}
+        self.paths = {'webcam':'/dev/video0'     ,'frontcam':'/dev/video2'     ,'backcam':'/dev/video4'} # usb/web cams
         self.ports = {'webcam':randint(8000,8079),'frontcam':randint(8000,8079),'backcam':randint(8000,8079)}
+        # check picam connection : vcgencmd get_camera
         self.streams = []
 
     def decorate(self,arguments):

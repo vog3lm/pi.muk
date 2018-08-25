@@ -30,7 +30,7 @@ class ProcessLogger(object):
         return decorate(self,arguments)
 
     def create(self,data={}):
-        self.logger.setLevel(self.args.get('level'))
+        self.logger.setLevel(int(self.args.get('level')))
         if(self.logger.handlers):
             self.logger.handlers.pop()
         formatter = logging.Formatter(fmt=self.args.get('format'),datefmt=self.args.get('date'))
@@ -104,7 +104,7 @@ class ProcessEngine(object):
         deamon['pid'] = self.pid
         deamons.update(identifier,deamon).write()
 
-        logging.info('%s process engine %s started'%(self.args.get('id'),self.pid))
+        logging.debug('%s process engine %s started'%(self.args.get('id'),self.pid))
         try:
             from signal import pause
             # from time import sleep
@@ -115,20 +115,20 @@ class ProcessEngine(object):
         except self.args['oops'] as e:
             logging.error('%s process engine %s error exception. %s'%(self.args.get('id'),self.pid,e.toString()))
         except ProcessStop as e:
-            logging.info('%s process engine %s stop exception'%(self.args.get('id'),self.pid))
+            logging.debug('%s process engine %s stop exception'%(self.args.get('id'),self.pid))
             self.kill()
-        logging.info('%s process engine %s is stopped.'%(self.args.get('id'),self.pid))
+        logging.debug('%s process engine %s is stopped.'%(self.args.get('id'),self.pid))
         return self
 
     def killer(self,sig,frame):
         self.killer()
 
     def kill(self,data={}):
-        logging.info('%s (%s) is to be killed'%(self.args.get('id'),self.pid))
+        logging.debug('%s (%s) is to be killed'%(self.args.get('id'),self.pid))
         for event in self.args.get('kills'):
-            logging.info('call %s'%event)
+            logging.debug('call %s'%event)
             self.emitter.emit(event,{})
-        logging.info('%s (%s) has been killed'%(self.args.get('id'),self.pid))
+        logging.debug('%s (%s) has been killed'%(self.args.get('id'),self.pid))
         identifier = self.args.get('id')
         deamons = ProcessDeamon().create()
         deamon = deamons.read(identifier)
@@ -150,15 +150,24 @@ class ProcessDeamon(object):
         self.path = 'hells.kitchen'
         self.parser = None
         self.deamons = {}
+        from lockfile import LockFile
+        self.lock = LockFile(self.path)
+        from time import sleep
+        self.sleep = sleep
 
     def initialize(self,key):
         self.deamons[key] = {'pid':0,'host':'0','port':0}
         return self
 
     def create(self):
+        while self.lock.is_locked():
+            logging.debug('deamon file locked for reading')
+            self.sleep(0.1)
         from configparser import ConfigParser
         self.parser = ConfigParser()
+        self.lock.acquire()
         self.parser.read(self.path)
+        self.lock.release()
         deamons = self.parser['deamons']
         from ast import literal_eval
         for deamon in deamons:
@@ -171,7 +180,7 @@ class ProcessDeamon(object):
         else:
             return None
 
-    def update(self,key,data={'pid':0,'host':0,'port':0}):
+    def update(self,key,data={'pid':0,'host':'0','port':0}):
         self.create()
         if key in self.deamons.keys():
             vals = self.deamons[key]
@@ -186,14 +195,19 @@ class ProcessDeamon(object):
         if key in self.deamons.keys():
             del self.deamons[key]
         else:
-            logging.info('not found is remvoed')
+            logging.debug('not found is remvoed')
         return self
 
     def write(self):
         for key in self.deamons.keys():
             self.parser['deamons'][key] = str(self.deamons.get(key))
+        while self.lock.is_locked():
+            logging.debug('deamon file locked for writing')
+            self.sleep(0.1)
+        self.lock.acquire()
         with open(self.path, 'w') as data:
             self.parser.write(data)
+        self.lock.release()
 
     def on(self,data):
         self.create().update(data.get('key'),data).write()
@@ -202,13 +216,37 @@ class ProcessDeamon(object):
         self.create().update(data.get('key')).write()
 
 class ProcessShell(object): # directly called from /bin/muk
-    def __init__(self):
+    def __init__(self,argv):
         self.services = ['app','web']
         self.deamons = ProcessDeamon().create()
 
-    def start(self,service,argv):
-        if service in self.services:
-            self.services = [service]
+        commands = {'start':self.start,'restart':self.restart,'kill':self.kill,'reset':self.reset,'status':self.status,'help':self.help}
+        command = argv[1]
+        logOpts = {}
+        for i in argv[1:]:
+            if '--only' in i:
+                service = i[7:]
+                if service in self.services:
+                    self.services = [service]
+                argv.remove(i) # n
+            elif '--verbose' in i:
+               logOpts['level'] = i[10:]
+        #        argv.remove(i)
+        #    elif '--noshell' in i:
+        #       logOpts['shell'] = False
+        #        argv.remove(i)
+        #    elif '--logfile' in i:
+        #       logOpts['path'] = i[10:]
+        #        argv.remove(i)
+
+        ProcessLogger().decorate(logOpts).create()
+
+        if command in commands.keys():
+            commands.get(command)(argv[2:])
+        else:
+            self.custom(argv[1:])
+
+    def start(self,argv):
         from time import sleep
         for service in self.services:
             deamon = self.deamons.read(service)
@@ -219,32 +257,33 @@ class ProcessShell(object): # directly called from /bin/muk
             else:
                 from subprocess import Popen
                 prc = Popen(['python','%s/start.py'%service]+argv) # non-blocking
-                sleep(0.1)
+                sleep(1) # wait for ready signal
+        self.deamons.create()
+        self.status(argv)
 
-    def restart(self,service,argv):
+    def restart(self,argv):
         if service in self.services:
             self.services = [service]
         for service in self.services:
             deamon = self.deamons.read(service)
             logging.error('restart %s with new options not implemented'%service)
 
-    def kill(self,service):
-        if service in self.services:
-            self.services = [service]
+    def kill(self,argv):
         from share.Network import SocketClient
         client = SocketClient()
         from time import sleep
         for service in self.services:
             deamon = self.deamons.read(service)
-            if None == deamon or not 'port' in deamon.keys():
-                logging.error('illegal process id. hells kitchen corrupt?')
-            elif 0 == deamon.get('port'):
-                print "%s is offline"%service
-            else:
+            keys = deamon.keys()
+            if None == deamon or not 'port' in keys or not 'host' in keys:
+                logging.error("process configuration corrupted. call 'muk reset --only=%s'"%service)
+            elif not 0 == deamon.get('port') and not '0' == deamon.get('host'):
                 client.send({'call':'kill-process'},host=deamon.get('host'),port=deamon.get('port'))
-                sleep(0.1)
+                sleep(1) # wait for ready signal
+        self.deamons.create()
+        self.status(argv)
 
-    def reset(self,service):
+    def reset(self,argv):
         if service in self.services:
             self.services = [service]
         from subprocess import Popen, PIPE
@@ -257,20 +296,28 @@ class ProcessShell(object): # directly called from /bin/muk
                 Popen(['kill','-9 %s'%pid])
             self.deamons.initialize(service).write()
 
-    def state(self,service):
-        if service in self.services:
-            self.services = [service]
+    def status(self,argv):
+        print '-------------------------------------------'
         for service in self.services:
             deamon = self.deamons.read(service)
-            logging.error('reset %s not implemented'%service)
-            # open socket client
-            # check state
+            keys = deamon.keys()
+            if None == deamon or not 'port' in keys or not 'pid' in keys or not 'host' in keys:
+                logging.error("process configuration corrupted. call 'outlaw reset --only=%s'"%service)
+            else:
+                
+                if 0 == deamon.get('pid'):
+                    print "  %s service is offline"%service
+                else:
+                    print "  %s service is running on pid %s"%(service,deamon.get('pid'))
+                if 0 == deamon.get('port') and '0' == deamon.get('host'):
+                    print "  %s socket is offline"%service
+                else:
+                    print "  %s socket is listening on %s:%s"%(service,deamon.get('host'),deamon.get('port'))
+        print '-------------------------------------------'
 
-    def help(self,service):
+    def help(self,argv):
         lines = ['\n Usage: muk [command] [options]']
-        if service in self.services:
-            self.services = [service]
-        else:
+        if 1 < len(self.services):
             lines = lines + ['\n Commands:\n'
                             ,' help......................: shows the application/a service help'
                             ,' kill [arguments]..........: kills the application/a service'
@@ -287,7 +334,7 @@ class ProcessShell(object): # directly called from /bin/muk
 
 class ProcessArguments(object):
     def __init__(self):
-        self.args = {'emitter':None}
+        self.args = {'emitter':None,'verbose=':'','logfile=':'','noshell=':''}
         self.opts = []
         self.logOpt = {}
         self.delivery = {'logger-options':self.logOpt}
