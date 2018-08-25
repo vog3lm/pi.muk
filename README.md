@@ -109,5 +109,5 @@ To start the application enter `muk start` into your CLI. This will start all ti
 
 ### The Project
 
-[Showcase Video 1](https://www.youtube.com/channel/UC8mzhI4oqa2SQDMScLVVmUw)
+[Showcase Video 1](https://www.youtube.com/watch?v=mdP7mmwJS-4)
 
