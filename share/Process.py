@@ -217,7 +217,7 @@ class ProcessDeamon(object):
 
 class ProcessShell(object): # directly called from /bin/muk
     def __init__(self,argv):
-        self.services = ['app','web']
+        self.services = ['app','web'] # 'webcam','frontcam','backcam' (done by engine)
         self.deamons = ProcessDeamon().create()
 
         commands = {'start':self.start,'restart':self.restart,'kill':self.kill,'reset':self.reset,'status':self.status,'help':self.help}
@@ -244,7 +244,10 @@ class ProcessShell(object): # directly called from /bin/muk
         if command in commands.keys():
             commands.get(command)(argv[2:])
         else:
-            self.custom(argv[1:])
+            print '---------------------------'
+            print '%s command unknown'%command
+            print '---------------------------'
+        #    self.custom(argv[1:])
 
     def start(self,argv):
         from time import sleep
@@ -260,6 +263,9 @@ class ProcessShell(object): # directly called from /bin/muk
                 sleep(1) # wait for ready signal
         self.deamons.create()
         self.status(argv)
+        import platform
+        print '  running on %s %s'%(platform.machine(),platform.version())
+        print '---------------------------------------------------------------'
 
     def restart(self,argv):
         if service in self.services:
@@ -297,14 +303,13 @@ class ProcessShell(object): # directly called from /bin/muk
             self.deamons.initialize(service).write()
 
     def status(self,argv):
-        print '-------------------------------------------'
+        print '---------------------------------------------------------------'
         for service in self.services:
             deamon = self.deamons.read(service)
             keys = deamon.keys()
             if None == deamon or not 'port' in keys or not 'pid' in keys or not 'host' in keys:
                 logging.error("process configuration corrupted. call 'outlaw reset --only=%s'"%service)
             else:
-                
                 if 0 == deamon.get('pid'):
                     print "  %s service is offline"%service
                 else:
@@ -313,7 +318,7 @@ class ProcessShell(object): # directly called from /bin/muk
                     print "  %s socket is offline"%service
                 else:
                     print "  %s socket is listening on %s:%s"%(service,deamon.get('host'),deamon.get('port'))
-        print '-------------------------------------------'
+        print '---------------------------------------------------------------'
 
     def help(self,argv):
         lines = ['\n Usage: muk [command] [options]']

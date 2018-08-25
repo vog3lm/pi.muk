@@ -23,7 +23,7 @@ if __name__ == "__main__":
     from Process import ProcessLogger, ProcessEngine
     logger = ProcessLogger().decorate({'emitter':application})
     engine = ProcessEngine().decorate({'emitter':application,'id':'app','services':['create-socket','create-gpio','create-cameras','create-firebase-server','create-remote-driver'] 
-                                                                       ,'kills':['kill-gpio','kill-socket','kill-cameras']}) # 'kill-driver'
+                                                                       ,'kills':['kill-gpio','kill-socket','kill-cameras']}) # 'kill-cameras' (done by process shell)
 
     from Options import Options
     Options().decorate({'emitter':application}).create().deliver()

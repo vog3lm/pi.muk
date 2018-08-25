@@ -156,12 +156,32 @@ class MjpegHttpIn(MjpegStreamerUtil):
 # /usr/local/lib/input_raspicam.so [options]
 # ---------------------------------------------------------------
 # The following parameters can be passed to this plugin:
-    # [-fps | --framerate]...: set video framerate, default 5 frame/sec
-    # [-x | --width ]........: width of frame capture, default 640
-    # [-y | --height]........: height of frame capture, default 480
+    # [-fps | --framerate]...: set video framerate, default 5 frame/sec, max 30
+    # [-x | --width ]........: width of frame capture, default 640, HD 1366
+    # [-y | --height]........: height of frame capture, default 480, HD 768
     # [-quality].............: set JPEG quality 0-100, default 85
     # [-usestills]...........: uses stills mode instead of video mode
     # [-preview].............: enable full screen preview
+    # ---------------------------------------------------------------
+    # https://www.raspberrypi.org/app/uploads/2013/07/RaspiCam-Documentation.pdf
+    # ---------------------------------------------------------------
+    # [-sh]..................: Set image sharpness (-100 to 100)
+    # [-co]..................: Set image contrast (-100 to 100)
+    # [-br]..................: Set image brightness (0 to 100)
+    # [-sa]..................: Set image saturation (-100 to 100)
+    # [-ISO].................: Set capture ISO
+    # [-vs]..................: Turn on video stabilisation
+    # [-ev]..................: Set EV compensation
+    # [-ex]..................: Set exposure mode (see raspistill notes)
+    # [-awb].................: Set AWB mode (see raspistill notes)
+    # [-ifx].................: Set image effect (see raspistill notes)
+    # [-cfx].................: Set colour effect (U:V)
+    # [-mm]..................: Set metering mode (see raspistill notes)
+    # [-rot].................: Set image rotation (0-359)
+    # [-stats]...............: Compute image stats for each picture (reduces noise)
+    # [-drc].................: Dynamic range compensation level (see raspistill notes)
+    # [-hf]..................: Set horizontal flip
+    # [-vf]..................: Set vertical flip
 # ---------------------------------------------------------------
 # Optional parameters (may not be supported by all cameras):
     # [-sh]..................: Set image sharpness (-100 to 100)
@@ -186,10 +206,10 @@ class MjpegRaspiCamIn(MjpegStreamerUtil):
     def __init__(self):
         super(MjpegRaspiCamIn,self).__init__()
         self.name = 'rpi'
-        self.args.update({'-i':'/usr/local/lib/input_raspicam.so'})
+        self.args.update({'i':'/usr/local/lib/input_raspicam.so','x':'1280','y':'720','q':'100','f':'15'})
     def get(self):
         self.validate()
-        return ''
+        return '%s -x %s -y %s -quality %s -fps %s'%(self.args.get('i'),self.args.get('x'),self.args.get('y'),self.args.get('q'),self.args.get('f'))
 
 # --- https://github.com/jacksonliam/mjpg-streamer/blob/master/mjpg-streamer-experimental/plugins/output_http/README.md
 # /usr/local/lib/output_http.so [options]
@@ -277,7 +297,7 @@ class MjpegFileOut(MjpegStreamerUtil):
 class VideoStream(object):
     def __init__(self):
         self.events = {'create-video':self.create,'kill-video':self.kill}
-        self.args = {'emitter':None,'id':'video','label':'unset','in':'ucv','out':'http-out','deamon':True}
+        self.args = {'emitter':None,'id':'video','label':'unset','in':'unset','out':'http-out','deamon':True}
         self.plugin = {'d':'unset','r':'unset','f':'unset'} # d /dev/video0
         self.plugout = {'w':'unset','p':'unset','c':None} # 'user:pass'
         self.input = {'ucv':MjpegUvcIn,'ocv':MjpegOpencvIn,'rpi':MjpegRaspiCamIn}
@@ -362,9 +382,23 @@ class Cameras(object):
         self.events = {'create-cameras':self.create,'kill-cameras':self.kill}
         self.args = {'emitter':None}
         from random import randint
-        self.paths = {'webcam':'/dev/video0'     ,'frontcam':'/dev/video2'     ,'backcam':'/dev/video4'} # usb/web cams
-        self.ports = {'webcam':randint(8000,8079),'frontcam':randint(8000,8079),'backcam':randint(8000,8079)}
-        # check picam connection : vcgencmd get_camera
+        self.paths = {} # usb/web cams
+        self.ports = {}
+        self.picam = []
+        import platform
+        # /sys/firmware/devicetree/base/model raspberry file
+        if 'arm' == platform.machine():
+            self.environment = 'raspberry'
+            self.picam = []
+            # check picam connection : vcgencmd get_camera
+            self.paths = {                              'backcam':'/dev/video0'} # usb/web cams
+            self.ports = {'frontcam':randint(8000,8079),'backcam':randint(8000,8079)}
+        else:
+            self.environment = 'desktop'
+            self.paths = {'webcam':'/dev/video0'     ,'frontcam':'/dev/video2'     ,'backcam':'/dev/video4'} # usb/web cams
+            self.ports = {'webcam':randint(8000,8079),'frontcam':randint(8000,8079),'backcam':randint(8000,8079)}
+
+
         self.streams = []
 
     def decorate(self,arguments):
@@ -394,7 +428,12 @@ class Cameras(object):
         for cam in cams:
             if cam in vals:
                 index = vals.index(cam)
-                self.streams.append(VideoStream().decorate({'emitter':emit,'label':keys[index],'d':cam,'p':port[index]}).create())
+                self.streams.append(VideoStream().decorate({'emitter':emit,'label':keys[index],'d':cam,'p':port[index],'in':'ucv'}).create())
+        for cam in self.picam:
+            if cam in vals:
+                index = vals.index(cam)
+                logging.info('start pi cam stream')
+        #        self.streams.append(VideoStream().decorate({'emitter':emit,'label':keys[index],'p':port[index],'in':'pi'}).create())
         return self
 
     def kill(self,data={}):
