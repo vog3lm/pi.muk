@@ -282,6 +282,12 @@ class MjpegFileOut(MjpegStreamerUtil):
         self.validate()
         return '%s -f %s -d %s'%(self.args.get('i'),self.args.get('f'),self.args.get('d'))
 
+
+
+
+
+# -------------------------------------------------------------------------------------------------
+# https://www.raspberrypi.org/forums/viewtopic.php?t=77796
 # -------------------------------------------------------------------------------------------------
 # Usage: mjpg_streamer -i "[file|http|ucv|opencv|ptp2|raspicam]" -o "[file|http|udp|viewer]" [-b]
 # -------------------------------------------------------------------------------------------------
@@ -294,7 +300,7 @@ class MjpegFileOut(MjpegStreamerUtil):
     # [-h | --help ]........: display this help
     # [-v | --version ].....: display version information
 # -------------------------------------------------------------------------------------------------
-class VideoStream(object):
+class MjpegStream(object):
     def __init__(self):
         self.events = {'create-video':self.create,'kill-video':self.kill}
         self.args = {'emitter':None,'id':'video','label':'unset','in':'unset','out':'http-out','deamon':True}
@@ -376,29 +382,142 @@ class VideoStream(object):
             ProcessDeamon().create().update(self.args.get('label')).write()
             self.emitter.emit('video-killed',{'call':'video-killed','id':'kill-video','label':label})
         return self
+# -------------------------------------------------------------------------------------------------
+# motion camera streaming                    https://www.lavrsen.dk/foswiki/bin/view/Motion/WebHome
+# -------------------------------------------------------------------------------------------------
+# screen resolution list                https://pacoup.com/2011/06/12/list-of-true-169-resolutions/
+# -------------------------------------------------------------------------------------------------
+    #      w      h  mod 8  16:9                                                           comments
+    #    384    216     Y     Y                                                      extremely tiny
+    #    512    288     Y     Y                                 very nice on wlan despite downloads
+    #    640    360     Y     Y
+    #    768    432     Y     Y
+    #    896    504     Y     Y
+    #   1024    576     Y     Y
+    #   1152    648     Y     Y
+    #   1280    720     Y     Y    720p HD
+    #   1408    792     Y     Y
+    #   1536    864     Y     Y
+    #   1664    936     Y     Y
+    #   1792   1008     Y     Y
+    #   1920   1080     Y     Y   1080p HD
+    #   2048   1152     Y     Y
+# -------------------------------------------------------------------------------------------------
+# sudo modprobe bcm2835-v4l2 or 
+# add bcm2835-v4l2 to /etc/modules ! makes pi cam visible in /dev/video*
+# -------------------------------------------------------------------------------------------------
+# sudo service motion start
+# sudo service motion stop
+# sudo service motion status
+# -------------------------------------------------------------------------------------------------
+# /etc/default/motion
+# -------------------------------------------------------------------------------------------------
+    # start_motion_daemon=yes
+# -------------------------------------------------------------------------------------------------
+# /etc/motion/motion.conf
+    # http://192.168.178.174:8080/0/config/list
+    # http://192.168.178.174:8080/0/config/set
+    # http://192.168.178.174:8080/0/config/get
+    # http://192.168.178.174:8080/0/action/snapshot
+    # http://192.168.178.174:8080/0/action/restart
+    # -------------------------------------------------------------------------------------------------
+    # deamon on
+    # ??? webcontrol_localhost on|off
+    # ??? webcontrol_html_output on|off
+    # ffmpeg_output_movies off
+    # ffmpeg_output_debug_movies off
+    # output_debug_pictures off
+    # output_pictures off
+    # target_dir /home/pi/Monitor
+    # v4l2_palette 15
+    # width %d
+    # height %d
+    # framerate %d
+    # stream_quality 50
+    # stream_maxrate 100
+    # stream_localhost off
+    # -------------------------------------------------------------------------------------------------
+    # mkdir /home/pi/Monitor
+    # sudo chgrp motion /home/pi/Monitor
+    # chmod g+rwx /home/pi/Monitor
+# -------------------------------------------------------------------------------------------------
+class MotionStream(object):
+    pass
+# ------------------------------------------------------------------------------------------------------
+# picamera web streaming     https://picamera.readthedocs.io/en/release-1.13/recipes2.html#web-streaming
+# ------------------------------------------------------------------------------------------------------
+class PiStream(object):
+    pass
+# -------------------------------------------------------------------------------------------------
+# flask camera streaming            https://blog.miguelgrinberg.com/post/video-streaming-with-flask
+#                                   https://github.com/miguelgrinberg/flask-video-streaming
+# -------------------------------------------------------------------------------------------------
+class FlaskStream(object):
+    def __init__(self):
+        self.running = False
+        self.thread = None
+        self.frame = None
+        from picamera import PiCamera
+        self.camera = PiCamera()
+
+    def create(self,data={}):
+        if self.running:
+            logging.warning('flask stream already started')
+            return self
+        self.thread = threading.Thread(target=self.stream)
+        self.thread.start()
+        return self
+
+    def frame(self):
+        if not self.running:
+            raise Exception()
+        timeout = time.time()
+        # wait until frames start to be available
+        # cancel on timeout
+        while None == self.frame:
+            time.sleep(1)
+            if 5 > time.time()-timeout:
+                raise Exception()
+        return self.frame
+
+    def stream(self):
+        self.running = True
+        with picamera.PiCamera() as camera:
+            camera.resolution = (320, 240)
+            camera.hflip = True
+            camera.vflip = True
+            camera.start_preview() # let camera warm up
+            time.sleep(2)
+            stream = io.BytesIO()
+            for foo in camera.capture_continuous(stream, 'jpeg', use_video_port=True):
+                # store frame
+                stream.seek(0)
+                self.frame = stream.read()
+                # reset stream for next frame
+                stream.seek(0)
+                stream.truncate()
 
 class Cameras(object):
     def __init__(self):
         self.events = {'create-cameras':self.create,'kill-cameras':self.kill}
         self.args = {'emitter':None}
         from random import randint
-        self.paths = {} # usb/web cams
+        self.paths = {}
         self.ports = {}
-        self.picam = []
         import platform
-        # /sys/firmware/devicetree/base/model raspberry file
+        # load driver
+            # sudo modprobe bcm2835-v4l2
+            # autoload driver on boot
+            # sudo nano /etc/modules
+            # bcm2835-v4l2
         if 'arm' == platform.machine():
             self.environment = 'raspberry'
-            self.picam = []
-            # check picam connection : vcgencmd get_camera
-            self.paths = {                              'backcam':'/dev/video0'} # usb/web cams
-            self.ports = {'frontcam':randint(8000,8079),'backcam':randint(8000,8079)}
+            self.paths = {'frontcam':'/dev/video0'}
+            self.ports = {'frontcam':randint(8000,8079)}
         else:
             self.environment = 'desktop'
-            self.paths = {'webcam':'/dev/video0'     ,'frontcam':'/dev/video2'     ,'backcam':'/dev/video4'} # usb/web cams
+            self.paths = {'webcam':'/dev/video0'     ,'frontcam':'/dev/video2'     ,'backcam':'/dev/video4'}
             self.ports = {'webcam':randint(8000,8079),'frontcam':randint(8000,8079),'backcam':randint(8000,8079)}
-
-
         self.streams = []
 
     def decorate(self,arguments):
@@ -428,12 +547,7 @@ class Cameras(object):
         for cam in cams:
             if cam in vals:
                 index = vals.index(cam)
-                self.streams.append(VideoStream().decorate({'emitter':emit,'label':keys[index],'d':cam,'p':port[index],'in':'ucv'}).create())
-        for cam in self.picam:
-            if cam in vals:
-                index = vals.index(cam)
-                logging.info('start pi cam stream')
-        #        self.streams.append(VideoStream().decorate({'emitter':emit,'label':keys[index],'p':port[index],'in':'pi'}).create())
+                self.streams.append(MjpegStream().decorate({'emitter':emit,'label':keys[index],'d':cam,'p':port[index],'in':'ucv'}).create())
         return self
 
     def kill(self,data={}):

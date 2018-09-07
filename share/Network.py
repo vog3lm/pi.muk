@@ -14,7 +14,7 @@ class EventNetwork(object):
         self.events = {}
         self.args = {'trace':False}
         self.flag = True
-        from queue import Queue
+        from Queue import Queue
         self.queue = Queue()
         from threading import Thread, Event
         self.lock = Event()

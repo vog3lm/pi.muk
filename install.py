@@ -20,13 +20,25 @@ def create(fn,lines):
 
 
 if __name__ == "__main__":
-    from pip.__main__ import _main as install
+    import pip
+    install = None
+    if hasattr(pip, 'main'):
+        install = pip.main
+    else:
+        install = pip._internal.main
+    from sys import exit
+    if None == install:
+        print 'pip install not found. cancel installation'
+        exit(1)
+
     # share
     install(['install','--upgrade','configparser'])
+    install(['install','--upgrade','netifaces'])
+    install(['install','--upgrade','lockfile'])
+    install(['install','--upgrade','queue'])
     # app
     install(['install','--upgrade','inputs'])
     install(['install','--upgrade','pynput'])
-    install(['install','--upgrade','netifaces'])
     # web
     install(['install','--upgrade','flask'])
     install(['install','--upgrade','flask-socketio'])
@@ -39,10 +51,14 @@ if __name__ == "__main__":
     from subprocess import Popen
     process = Popen(['apt-get','update'])
     process.communicate()
+    # picamera 'usb' driver
+    # or append bcm2835-v4l2 to /etc/modules
+    process = Popen(['sudo','modprobe','bcm2835-v4l2'])
+    process.communicate()
     # mjpg streamer
     apt(['build-essential','libjpeg8-dev','imagemagick','libv4l-dev','cmake'])
-    #process = Popen(['cd','/tmp','git','clone','https://github.com/vog3lm/mjpg-streamer.git','make','sudo','make','install'])
-    #process.communicate()
+    process = Popen(['cd','/tmp','git','clone','https://github.com/vog3lm/mjpg-streamer.git','make','sudo','make','install'])
+    process.communicate()
     # tools
     #apt(['nmap','wireshark','john','hydra','aircrack-ng'])
     #Popen(['wget','https://downloads.metasploit.com/data/releases/metasploit-latest-linux-x64-installer.run'
@@ -81,9 +97,4 @@ if __name__ == "__main__":
         ,"exit(0)"]
     create(fn,lines)
     check(fn,'shell environment variable')
-
-
-
-
-
-
+    exit(0)
