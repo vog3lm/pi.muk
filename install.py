@@ -1,4 +1,4 @@
-
+#!/usr/bin/python
 def apt(packages):
     process = Popen(['apt-get','-y','install']+packages)
     process.communicate()
@@ -18,83 +18,120 @@ def create(fn,lines):
     except IOError as e:
         error("install %s error, %s"%(fn,e.strerror))
 
-
 if __name__ == "__main__":
-    import pip
-    install = None
-    if hasattr(pip, 'main'):
-        install = pip.main
-    else:
-        install = pip._internal.main
-    from sys import exit
-    if None == install:
-        print 'pip install not found. cancel installation'
-        exit(1)
-
-    # share
-    install(['install','--upgrade','configparser'])
-    install(['install','--upgrade','netifaces'])
-    install(['install','--upgrade','lockfile'])
-    install(['install','--upgrade','queue'])
-    # app
-    install(['install','--upgrade','inputs'])
-    install(['install','--upgrade','pynput'])
-    # web
-    install(['install','--upgrade','flask'])
-    install(['install','--upgrade','flask-socketio'])
-    install(['install','--upgrade','flask-login'])
-    install(['install','--upgrade','flask-sse'])
-
-    #install(['install','--upgrade','Pyrebase']) #?
-    #install(['install','--upgrade','yowsup2']) # whats app
-
-    from subprocess import Popen
-    process = Popen(['apt-get','update'])
-    process.communicate()
-    # picamera 'usb' driver
-    # or append bcm2835-v4l2 to /etc/modules
-    process = Popen(['sudo','modprobe','bcm2835-v4l2'])
-    process.communicate()
-    # mjpg streamer
-    apt(['build-essential','libjpeg8-dev','imagemagick','libv4l-dev','cmake'])
-    process = Popen(['cd','/tmp','git','clone','https://github.com/vog3lm/mjpg-streamer.git','make','sudo','make','install'])
-    process.communicate()
-    # tools
-    #apt(['nmap','wireshark','john','hydra','aircrack-ng'])
-    #Popen(['wget','https://downloads.metasploit.com/data/releases/metasploit-latest-linux-x64-installer.run'
-    #      ,'wget','https://downloads.metasploit.com/data/releases/metasploit-latest-linux-x64-installer.run.sha1'
-    #      ,'echo','$(cat metasploit-latest-linux-x64-installer.run.sha1)'
-    #             ,'metasploit-latest-linux-x64-installer.run > metasploit-latest-linux-x64-installer.run.sha1 '
-    #      ,'shasum','-c','metasploit-latest-linux-x64-installer.run.sha1'
-    #      ,'chmod','+x','./metasploit-latest-linux-x64-installer.run','&&','./metasploit-latest-linux-x64-installer.run'])
-    #process.communicate()
-
-    # OWASP Zed
-    # Reaver
-    # oclHashcat # handshake gpu capture
-    # Crunch # wordlist attack
-    # Macchanger
-
-    #Popen(['ssl/.ssl.sh','--install','--create'])
-    #p.communicate
-
     from logging import info, error
-    from os import getcwd, system, path
     from share.Process import ProcessLogger, ProcessDeamon
-    ProcessLogger().decorate({}).create()
-    fn = '%s/hells.kitchen'%getcwd()
-    create(fn,['[deamons]'])
-    check(fn,'deamon configuration file')
-    ProcessDeamon().create().initialize('app').initialize('web').write()
-    fn = '/bin/muk'
-    lines = ["#!/usr/bin/python\n"
-        ,"from os import chdir\n"
-        ,"chdir('%s')\n"%getcwd()
-        ,"from sys import path, argv, exit\n"
-        ,"path.append('%s')\n"%getcwd()
-        ,"from share.Process import ProcessShell\n"
-        ,"ProcessShell(argv)\n"
-        ,"exit(0)"]
-    create(fn,lines)
-    check(fn,'shell environment variable')
-    exit(0)
+    ProcessLogger().create()
+    try:
+        from sys import exit, argv
+        # parse options
+        options = ['pip','mjpg','ssl','cli','cfg','report']
+        report = False
+        from getopt import getopt, GetoptError
+        try:
+            opts, args = getopt(argv[1:],shortopts='',longopts=options)
+            options = []
+        except GetoptError as e:
+            error(e.msg)
+            exit(1)
+        for o, a in opts:
+            if '--pip' == o:options.append('pip')
+            elif '--mjpg' == o:options.append('mjpg')
+            elif '--ssl' == o:options.append('ssl')
+            elif '--cli' == o:options.append('cli')
+            elif '--cfg' == o:options.append('cfg')
+            elif '--report' == o:report = True
+        if 0 == len(options):
+            options = ['pip','mjpg','ssl','cli','cfg']
+        # save root directory
+        from os import getcwd, system, path
+        root = getcwd()
+
+        if 'pip' in options: # install pip dependencies
+            import pip
+            install = None
+            if hasattr(pip,'main'):
+                install = pip.main
+            elif hasattr(pip,'_internal'):
+                install = pip._internal.main
+            if None == install:
+                error("python-pip not found. call 'apt-get install python-pip'")
+            else:
+                packages = ['configparser','netifaces','lockfile','python-git','inputs','pynput'
+                           ,'flask','flask-socketio','flask-login','flask-sse'
+                        #   ,'Pyrebase','yowsup2'
+                           ]
+                for package in packages:
+                    install(['install','--upgrade',package])
+                info('%s successfully installed'%', '.join(packages))
+
+        if 'mjpg' in options or 'other' in options:
+            from subprocess import Popen
+            process = Popen(['apt-get','update'])
+            process.communicate()
+
+        if 'mjpg' in options:
+            # load picamera 'usb' driver
+            process = Popen(['sudo','modprobe','bcm2835-v4l2']) # ,stdout=PIPE, stdin=PIPE, stderr=PIPE
+            process.communicate()
+            # or append bcm2835-v4l2 to /etc/modules
+            # width open('/etc/modules',w+) as fn:
+            #     lines = fn.readlines()
+            #     if not 'bcm2835-v4l2' in lines:
+            #         lines.append('bcm2835-v4l2')
+            #         fn.writelines(lines)
+            # mjpg streamer
+            apt(['build-essential','libjpeg8-dev','imagemagick','libv4l-dev','cmake'])
+            from os import chdir, listdir
+            if not 'mjpg-streamer' in listdir('/tmp'):
+                from git import Git
+                Git('/tmp').clone('https://github.com/vog3lm/mjpg-streamer.git')
+            chdir('/tmp/mjpg-streamer/mjpg-streamer-experimental/')
+            process = Popen(['make'])
+            process.communicate()
+            process = Popen(['sudo','make','install'])
+            process.communicate()
+            chdir(root)
+            info('mjpeg-streamer successfully installed')
+
+
+        if 'ssl' in options: # install ssl key/crt
+            process = Popen(['ssl/./ssl.sh','--install','--create'])
+            process.communicate()
+            info('ssl keys and certificates successfully installed')
+
+        if 'cli' in options:
+            fn = '/bin/muk'
+            lines = ["#!/usr/bin/python\n"
+                ,"from os import chdir\n"
+                ,"chdir('%s')\n"%root
+                ,"from sys import path, argv, exit\n"
+                ,"path.append('%s')\n"%root
+                ,"from share.Process import ProcessShell\n"
+                ,"ProcessShell(argv)\n"
+                ,"exit(0)"]
+            create(fn,lines)
+            check(fn,'shell environment variable')
+
+        if 'cfg' in options:
+            fn = '%s/hells.kitchen'%root
+            create(fn,['[deamons]'])
+            check(fn,'deamon configuration file')
+            ProcessDeamon().create().initialize('app').initialize('web').write()
+
+        if report:
+            length = 0
+            lines = []
+            for option in options:
+            	lines.append('%s successfully installed'%option)
+            for line in lines:
+                if length < len(line):
+                    length = len(line)
+            div = '-'*(length+4)
+            print '%s\n  %s\n%s'%(div,'\n  '.join(lines),div)
+
+        exit(0)
+    except KeyboardInterrupt as e:
+        info('installation canceled')
+        exit(2)
+

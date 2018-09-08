@@ -5,6 +5,7 @@
 *.kitchen
 *.json
 
+docs
 store
 ssl/*.key
 ssl/*.crt
