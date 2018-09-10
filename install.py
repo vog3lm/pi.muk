@@ -25,7 +25,7 @@ if __name__ == "__main__":
     try:
         from sys import exit, argv
         # parse options
-        options = ['pip','mjpg','ssl','cli','cfg','report']
+        options = ['pip','mjpg','ssl','cli','cfg','noled','report']
         report = False
         from getopt import getopt, GetoptError
         try:
@@ -40,6 +40,7 @@ if __name__ == "__main__":
             elif '--ssl' == o:options.append('ssl')
             elif '--cli' == o:options.append('cli')
             elif '--cfg' == o:options.append('cfg')
+        	elif '--noled' == o:options.append('noled')
             elif '--report' == o:report = True
         if 0 == len(options):
             options = ['pip','mjpg','ssl','cli','cfg']
@@ -70,6 +71,14 @@ if __name__ == "__main__":
             process = Popen(['apt-get','update'])
             process.communicate()
 
+        if 'noled' in options:
+            pass
+            # width open('/etc/modules',w+) as fn:
+            #     lines = fn.readlines()
+            #     if not 'bcm2835-v4l2' in lines:
+            #         lines.append('bcm2835-v4l2')
+            #         fn.writelines(lines)
+
         if 'mjpg' in options:
             # load picamera 'usb' driver
             process = Popen(['sudo','modprobe','bcm2835-v4l2']) # ,stdout=PIPE, stdin=PIPE, stderr=PIPE
@@ -81,13 +90,13 @@ if __name__ == "__main__":
             #         lines.append('bcm2835-v4l2')
             #         fn.writelines(lines)
             # mjpg streamer
-            apt(['build-essential','libjpeg8-dev','imagemagick','libv4l-dev','cmake'])
+            apt(['build-essential','libjpeg8-dev','imagemagick','libv4l-dev','v4l-utils','cmake'])
             from os import chdir, listdir
             if not 'mjpg-streamer' in listdir('/tmp'):
                 from git import Git
                 Git('/tmp').clone('https://github.com/vog3lm/mjpg-streamer.git')
             chdir('/tmp/mjpg-streamer/mjpg-streamer-experimental/')
-            process = Popen(['make'])
+            process = Popen(['make','USE_LIBV4L2=true'])
             process.communicate()
             process = Popen(['sudo','make','install'])
             process.communicate()
@@ -114,10 +123,26 @@ if __name__ == "__main__":
             check(fn,'shell environment variable')
 
         if 'cfg' in options:
-            fn = '%s/hells.kitchen'%root
-            create(fn,['[deamons]'])
-            check(fn,'deamon configuration file')
-            ProcessDeamon().create().initialize('app').initialize('web').write()
+            fn = '%s/configuration.cfg'%root
+            lines = ['[firebase-client]\n'
+            ,'apiKey = None\n'
+            ,'authDomain = None\n'
+            ,'databaseURL = None\n'
+            ,'projectId = None\n'
+            ,'storageBucket = None\n'
+            ,'messagingSenderId = None\n'
+            ,'\n[firebase-user]\n'
+            ,'mail = None\n'
+            ,'pass = None\n'
+            ,'\n[firebase-server]\n'
+            ,'file = None\n']
+            create(fn,lines)
+            check(fn,'application configuration file')
+
+        fn = '%s/hells.kitchen'%root
+        create(fn,['[deamons]'])
+        check(fn,'deamon configuration file')
+        ProcessDeamon().create().initialize('app').initialize('web').write()
 
         if report:
             length = 0
