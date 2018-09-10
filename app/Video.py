@@ -1,6 +1,13 @@
 import logging
 
-# >  mjpg_streamer -i "/usr/local/lib/input_uvc.so -d /dev/video0 -r 640x480 -f 15' -n -y" -o "/usr/local/lib/output_http.so -n /usr/local/www -p 8080"
+#               >  mjpg_streamer -i "/usr/local/lib/mjpg-streamer/input_uvc.so -d /dev/video0 -r 640x480 -f 15' -n -y" -o "/usr/local/lib/mjpg-streamer/output_http.so -n /usr/local/www -p 8080"
+#               >  mjpg_streamer -i "/usr/local/lib/mjpg-streamer/input_uvc.so -d /dev/video0 -r 512x288 -f 15' -n" -o "/usr/local/lib/mjpg-streamer/output_http.so -n -p 8080"
+#               >  mjpg_streamer -i "/usr/local/lib/mjpg-streamer/input_uvc.so -d /dev/video0 -r 512x288 -f 10' -n -u -q 50" -o "/usr/local/lib/mjpg-streamer/output_http.so -n -p 8080"
+# very nice !!  >  mjpg_streamer -i "/usr/local/lib/mjpg-streamer/input_uvc.so -d /dev/video0 -r 768x432 -f 10' -n -u -q 50" -o "/usr/local/lib/mjpg-streamer/output_http.so -n -p 8080"
+
+
+
+
 
 class MjpegException(Exception):
     def __init__(self,errors):
@@ -62,6 +69,7 @@ class MjpegFileIn(MjpegStreamerUtil):
     #                          SVGA XGA SXGA 
     #                          or a custom value like the following
     #                          example: 640x480
+    # [-q | --quality ] .....: set quality of JPEG encoding
     # [-f | --fps ]..........: frames per second
     #                          (activates YUYV format, disables MJPEG)
     # [-m | --minimum_size ].: drop frames smaller then this limit, useful
@@ -71,8 +79,11 @@ class MjpegFileIn(MjpegStreamerUtil):
     # [-n | --no_dynctrl ]...: do not initalize dynctrls of Linux-UVC driver
     # [-l | --led ]..........: switch the LED "on", "off", let it "blink" or leave
     #                          it up to the driver using the value "auto"
-    # [-y | --yuv]...........: anders farbdinges dann gehts!
     # [-t | --tvnorm ] ......: set TV-Norm pal, ntsc or secam
+    # [-u | --uyvy ] ........: Use UYVY format, default: MJPEG (uses more cpu power)
+    # [-y | --yuv  ] ........: Use YUV format, default: MJPEG (uses more cpu power)
+    # [-fourcc ] ............: Use FOURCC codec 'argopt', 
+    #                          currently supported codecs are: RGBP 
 # ---------------------------------------------------------------
 # Optional parameters (may not be supported by all cameras):
     # [-br ].................: Set image brightness (auto or integer)

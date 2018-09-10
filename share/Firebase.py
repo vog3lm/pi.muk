@@ -25,11 +25,19 @@ class FirebaseClient(object):
         parser = ConfigParser()
         parser.optionxform=str
         parser.read(self.args.get('path'))
+        errors = []
+        if not 'firebase-client' in parser.sections():
+            errors.append("no 'firebase-client' section in %s"%self.args.get('path'))
+        if not 'firebase-user' in parser.sections():
+            errors.append("no 'firebase-client' section in %s"%self.args.get('path'))
+        if 0 < len(errors):
+            logging.error(', '.join(errors))
+            return self
         firebase = {}
-        tmp = parser['firebase']
+        tmp = parser['firebase-client']
         for key in tmp:
             firebase[key] = str(tmp[key])
-        tmp = parser['user']
+        tmp = parser['firebase-user']
         for key in tmp:
             firebase[key] = str(tmp[key])
         self.decorate(firebase)
@@ -136,8 +144,8 @@ class FirebaseClient(object):
 
 class FirebaseServer(object):
     def __init__(self):
-        self.args = {'emitter':None,'path':'jay-sidis-a93484ec6cff.json'}
-        self.events = {}
+        self.args = {'emitter':None,'path':'configuration.cfg','file':None}
+        self.events = {'create-firebase-server':self.create,'configurate-firebase-server':self.configurate}
         self.admin = None
         self.auth = None
 
@@ -145,9 +153,33 @@ class FirebaseServer(object):
         from Process import decorate
         return decorate(self,arguments)
 
+    def configurate(self,data={}):
+        from configparser import ConfigParser
+        parser = ConfigParser()
+        # parser.optionxform=str
+        parser.read(self.args.get('path'))
+        firebase = {}
+        if not 'firebase-user' in parser.sections():
+            logging.error("no 'firebase-server' section in %s"%self.args.get('path'))
+            return self
+        tmp = parser['firebase-server']
+        for key in tmp:
+            firebase[key] = str(tmp[key])
+        self.decorate(firebase)
+        return self
+
     def create(self,data={}):
+        certificate = self.args.get('file')
+        errors = []
+        if None == certificate:
+            errors.append('no firebase-admin certificate path found')
+        if not isfile(certificate):
+            errors.append('no firebase-admin certificate file found')
+        if 0 < len(errors):
+            logging.error(', '.join(errors))
+            return self            
         from firebase_admin.credentials import Certificate
-        cred = Certificate(self.args.get('path'))
+        cred = Certificate(certificate)
         from firebase_admin import initialize_app, auth
         self.admin = initialize_app(cred)
         self.auth = auth

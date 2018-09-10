@@ -55,11 +55,9 @@ if __name__ == "__main__":
     VideoListener().decorate({'emitter':application})
     DriveListener().decorate({'emitter':application})
 
-    from Firebase import FirebaseClient # do in client later, send idToken to verfiy in wathdog.
+    from Firebase import FirebaseClient, FirebaseServer
     FirebaseClient().decorate({'emitter':application}).configurate()
-
-    # from share.Firebase import FirebaseServer
-    # server = FirebaseServer().decorate({'emitter':application}) #.create()
+    FirebaseServer().decorate({'emitter':application}).configurate() #.create()
 
     from Process import ProcessLogger, ProcessEngine
     logger = ProcessLogger().decorate({'emitter':application})
