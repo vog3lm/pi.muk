@@ -40,7 +40,7 @@ if __name__ == "__main__":
             elif '--ssl' == o:options.append('ssl')
             elif '--cli' == o:options.append('cli')
             elif '--cfg' == o:options.append('cfg')
-        	elif '--noled' == o:options.append('noled')
+            elif '--noled' == o:options.append('noled')
             elif '--report' == o:report = True
         if 0 == len(options):
             options = ['pip','mjpg','ssl','cli','cfg']
@@ -148,7 +148,7 @@ if __name__ == "__main__":
             length = 0
             lines = []
             for option in options:
-            	lines.append('%s successfully installed'%option)
+                lines.append('%s successfully installed'%option)
             for line in lines:
                 if length < len(line):
                     length = len(line)
