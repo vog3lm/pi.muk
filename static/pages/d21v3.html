@@ -29,6 +29,7 @@
 						stream.removeClass('hide');
 						$('header mirror a').addClass('hide');
 					}
+					console.log('video-connected',data)
 				}
 				,'video-disconnected':(data) => {
 					$('controls a#video-control').css({'color':'rgb(255,0,170)','filter':'drop-shadow(0px 0px 5px rgb(255,0,170))'});
@@ -67,11 +68,30 @@
 				,'switch-hud-if':(data) => {
 					console.log('page swicht hud if');
 				}
-				,'tint-interface':(data) => {
-					var colors = ['#FFFFFF','#000000','00FF88','#FF0097','#00FF00','#0000FF','#FF0000'];
-					var color = Math.floor(Math.random()*5)+0 ;
-					$('body').trigger('tint-hud-if',{'call':'tint-hud-if','id':'tint-interface','color':colors[color]})
+				,'toggle-interface-control':(data) => {
+					var element = $('control');
+					if(element.hasClass('hide')){
+						clrs = ["rgb(255,0,0)","rgb(0,255,0)","rgb(0,0,255)","rgb(255,255,0)","rgb(255,0,255)"]
+						call = "$('body').trigger('tint-hud-if',{'call':'tint-hud-if','id':'tint-interface','color':})";
+						html = ''
+						for(var i=0; i<clrs.length; i++){
+							html = html + '<a href="#" style="background-color:'+clrs[i]+'" onclick="function dummy(){$(\'body\').trigger(\'tint-hud-if\',{\'call\':\'tint-hud-if\',\'id\':\'tint-interface\',\'color\':\''+clrs[i]+'\'})};dummy()" class="color"></a>'
+						}
+						element.html(html)
+						element.removeClass('hide')
+					}else{
+						element.addClass('hide')
+						element.html('')
+					}
+
+					// $("body").trigger("tint-hud-if",{"call":"tint-hud-if","id":"tint-interface","color":'+clrs[i]+'"})
+
 				}
+				,'select-color':(data) => {
+					$('body').trigger('tint-hud-if',{'call':'tint-hud-if','id':'tint-interface','color':data.id})
+				}
+
+
 				,'toggle-color':(data) => {
 					var element = $('controls a#color-control');
 					if(element.hasClass('light')){
@@ -113,6 +133,21 @@
 			color:rgb(187,187,187);
 			filter:drop-shadow(0px 0px 5px white);
 		}
+        header section#content control {
+            position:absolute;
+            width:32px;
+            top:calc(50% + 2 * 32px);
+            left:32px;
+            transform:translate(0, -50%);
+    	}
+    	header section#content control a.color {
+    		width:calc(32px - 14px);
+    		height:calc(32px - 14px);
+    		margin:7px;
+    		background-color:rgba(255,0,0);
+    	}
+
+
 		header section#content mirror {
 		    position: absolute;
 		    width: 640px;
@@ -153,7 +188,7 @@
 		<!--	<compass>
 				compass mitte oben
 		-->	</compass>
-			<mirror>
+			<mirror class="hide">
 				<a href="" src="" call="" class="fa fa-exclamation-triangle" title="no backcam found"></a>
 				<img src="" class="hide" id="mirror-stream" alt="mirror-stream"/>
 			</mirror>
@@ -168,9 +203,10 @@
 				<a href="#" id="drive-control" class="fa fa-1-25x fa-wifi sioc"></a>
 				<a href="#" id="video-control" class="fa fa-1-25x fa-video-camera sioc"></a>
 				<a href="#" id="drive-control" call="toggle-drive" class="fa fa-1-5x fa-gamepad sioc"></a>
-				<a href="#" id="color-control" call="switch-hud-if" class="fa fa-1-5x fa-eye light"></a>
-				<a href="#" id="color-control" call="tint-interface" class="fa fa-1-5x fa-tint light"></a>
+				<a href="#" id="hud-if-control" call="switch-hud-if" class="fa fa-1-5x fa-eye light"></a>
+				<a href="#" id="color-control" call="toggle-interface-control" class="fa fa-1-5x fa-tint light"></a>
 			</controls>
+			<control class="hide"></control>
 		</section>
 		<popup>
 			<img src="static/images/no.connection.png" width="352px" height="96px" style="filter:drop-shadow(0 0 10px rgba(255,0,170));" alt="no-connection"/>

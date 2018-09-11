@@ -25,8 +25,9 @@ if __name__ == "__main__":
     try:
         from sys import exit, argv
         # parse options
-        options = ['pip','mjpg','ssl','cli','cfg','noled','report']
+        options = ['pip','mjpg','ssl','cli','cfg','noled','report','help']
         report = False
+        help = False
         from getopt import getopt, GetoptError
         try:
             opts, args = getopt(argv[1:],shortopts='',longopts=options)
@@ -42,8 +43,29 @@ if __name__ == "__main__":
             elif '--cfg' == o:options.append('cfg')
             elif '--noled' == o:options.append('noled')
             elif '--report' == o:report = True
+            elif '-h' == o:help = True
+            elif '--help' == o:help = True
         if 0 == len(options):
             options = ['pip','mjpg','ssl','cli','cfg']
+
+
+        if help:
+            lines = ['\n Usage: sudo python install.py [options]\n'
+                    ,' Installation Options:\n'
+                    ,'  [    | --cfg ].......: install configuration.cfg only'
+                    ,'                         (overwrites existing files)'
+                    ,'  [    | --cli ].......: install bash environment file only'
+                    ,'  [ -h | --help].......: show help text'
+                    ,'  [    | --mjpg ]......: install mjpeg streamer only'
+                    ,'                         (depends on git and python-git,'
+                    ,'                          make sure both are installed'
+                    ,'                          https://github.com/vog3lm/mjpg-streamer)'
+                    ,'  [    | --noled ].....: deactivate all leds of the rasperry'
+                    ,'  [    | --pip ].......: install all python dependencies'
+                    ,'  [    | --ssl ].......: install custom tls certification\n']
+            print '%s '%'\n'.join(lines)
+            exit(0)
+
         # save root directory
         from os import getcwd, system, path
         root = getcwd()
@@ -59,7 +81,8 @@ if __name__ == "__main__":
                 error("python-pip not found. call 'apt-get install python-pip'")
             else:
                 packages = ['configparser','netifaces','lockfile','python-git','inputs','pynput'
-                           ,'flask','flask-socketio','flask-login','flask-sse'
+                           ,'flask','flask-socketio','flask-login','flask-sse','pyrebase','requests'
+                           ,'google-auth-oauthlib'
                         #   ,'Pyrebase','yowsup2'
                            ]
                 for package in packages:
@@ -107,6 +130,8 @@ if __name__ == "__main__":
         if 'ssl' in options: # install ssl key/crt
             process = Popen(['ssl/./ssl.sh','--install','--create'])
             process.communicate()
+            system("sudo chmod 777 ssl/host.key")
+            system("sudo chmod 777 ssl/host.crt")
             info('ssl keys and certificates successfully installed')
 
         if 'cli' in options:

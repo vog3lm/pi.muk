@@ -5,10 +5,6 @@ import logging
 #               >  mjpg_streamer -i "/usr/local/lib/mjpg-streamer/input_uvc.so -d /dev/video0 -r 512x288 -f 10' -n -u -q 50" -o "/usr/local/lib/mjpg-streamer/output_http.so -n -p 8080"
 # very nice !!  >  mjpg_streamer -i "/usr/local/lib/mjpg-streamer/input_uvc.so -d /dev/video0 -r 768x432 -f 10' -n -u -q 50" -o "/usr/local/lib/mjpg-streamer/output_http.so -n -p 8080"
 
-
-
-
-
 class MjpegException(Exception):
     def __init__(self,errors):
         self.errors = errors
@@ -371,7 +367,7 @@ class MjpegStream(object):
                 self.emitter.emit('video-created',{'call':'video-created','id':'create-video','label':self.args.get('label'),'port':port,'credentials':self.plugout.get('c')})
             # add to hells kitchen
             from Process import ProcessDeamon
-            ProcessDeamon().create().update(self.args.get('label'),deamon).write()
+            ProcessDeamon().create().update(self.args.get('label'),deamon,True).write()
             from time import sleep
             sleep(0.1)
         except MjpegException as e:
@@ -527,8 +523,8 @@ class Cameras(object):
             self.ports = {'frontcam':randint(8000,8079)}
         else:
             self.environment = 'desktop'
-            self.paths = {'webcam':'/dev/video0'     ,'frontcam':'/dev/video2'     ,'backcam':'/dev/video4'}
-            self.ports = {'webcam':randint(8000,8079),'frontcam':randint(8000,8079),'backcam':randint(8000,8079)}
+            self.paths = {'frontcam':'/dev/video0'     ,'backcam':'/dev/video2'     ,'sidecam':'/dev/video4'}
+            self.ports = {'frontcam':randint(8000,8079),'backcam':randint(8000,8079),'sidecam':randint(8000,8079)}
         self.streams = []
 
     def decorate(self,arguments):

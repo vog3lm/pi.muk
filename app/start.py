@@ -18,7 +18,7 @@ if __name__ == "__main__":
     Gpios().decorate({'emitter':application}) # .create().start()
 
     from Firebase import FirebaseServer
-    server = FirebaseServer().decorate({'emitter':application}) #.create()
+    server = FirebaseServer().decorate({'emitter':application}).configurate() #.create()
 
     from Process import ProcessLogger, ProcessEngine
     logger = ProcessLogger().decorate({'emitter':application})

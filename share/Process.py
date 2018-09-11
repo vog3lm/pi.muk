@@ -180,9 +180,12 @@ class ProcessDeamon(object):
         else:
             return None
 
-    def update(self,key,data={'pid':0,'host':'0','port':0}):
+    def update(self,key,data={'pid':0,'host':'0','port':0},force=False):
         self.create()
-        if key in self.deamons.keys():
+        keys = self.deamons.keys()
+        if not key in keys and force:
+            self.deamons[key] = data
+        if key in keys:
             vals = self.deamons[key]
             keys = vals.keys()
             for k in data:

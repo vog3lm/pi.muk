@@ -156,10 +156,10 @@ class FirebaseServer(object):
     def configurate(self,data={}):
         from configparser import ConfigParser
         parser = ConfigParser()
-        # parser.optionxform=str
+        parser.optionxform=str
         parser.read(self.args.get('path'))
         firebase = {}
-        if not 'firebase-user' in parser.sections():
+        if not 'firebase-server' in parser.sections():
             logging.error("no 'firebase-server' section in %s"%self.args.get('path'))
             return self
         tmp = parser['firebase-server']
@@ -173,6 +173,7 @@ class FirebaseServer(object):
         errors = []
         if None == certificate:
             errors.append('no firebase-admin certificate path found')
+        from os.path import isfile
         if not isfile(certificate):
             errors.append('no firebase-admin certificate file found')
         if 0 < len(errors):
