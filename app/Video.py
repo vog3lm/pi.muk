@@ -101,10 +101,10 @@ class MjpegUvcIn(MjpegStreamerUtil):
     def __init__(self):
         super(MjpegUvcIn,self).__init__()
         self.name = 'ucv'
-        self.args.update({'i':'/usr/local/lib/mjpg-streamer/input_uvc.so','d':'unset','r':'640x480','f':'15'}) # -d /dev/video0
+        self.args.update({'i':'/usr/local/lib/mjpg-streamer/input_uvc.so','d':'unset','r':'768x432','f':'10'}) # -d /dev/video0
     def get(self):
         self.validate()
-        return '%s -d %s -r %s -f %s\' -n -y'%(self.args.get('i'),self.args.get('d'),self.args.get('r'),self.args.get('f'))
+        return '%s -d %s -r %s -f %s\' -n -u -q 50'%(self.args.get('i'),self.args.get('d'),self.args.get('r'),self.args.get('f'))
 
 # --- https://github.com/jacksonliam/mjpg-streamer/blob/master/mjpg-streamer-experimental/plugins/input_opencv/README.md
 # /usr/local/lib/input_opencv.so [options]
@@ -248,7 +248,7 @@ class MjpegHttpOut(MjpegStreamerUtil):
         self.args.update({'o':'/usr/local/lib/mjpg-streamer/output_http.so','p':'8080','c':None,'w':'/root/pi.stalker/static/mjpg'})
     def get(self):
         self.validate()
-        tmp = '%s -w %s -p %s'%(self.args.get('o'),self.args.get('w'),self.args.get('p'))
+        tmp = '%s -w %s -p %s -n'%(self.args.get('o'),self.args.get('w'),self.args.get('p'))
         if not None == self.args.get('c'):
             tmp = '%s -c %s'%(tmp,self.args.get('c'))
         return tmp
