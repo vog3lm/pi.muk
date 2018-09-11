@@ -49,7 +49,7 @@ class MjpegFileIn(MjpegStreamerUtil):
     def __init__(self):
         super(MjpegFileIn,self).__init__()
         self.name = 'file-in'
-        self.args.update({'i':'/usr/local/lib/input_file.so','d':'unset','r':'unset','f':'unset','n':'unset','e':'unset'})
+        self.args.update({'i':'/usr/local/lib/mjpg-streamer/input_file.so','d':'unset','r':'unset','f':'unset','n':'unset','e':'unset'})
     def get(self):
         self.validate()
         return '%s'%(self.args.get('i'))
@@ -101,7 +101,7 @@ class MjpegUvcIn(MjpegStreamerUtil):
     def __init__(self):
         super(MjpegUvcIn,self).__init__()
         self.name = 'ucv'
-        self.args.update({'i':'/usr/local/lib/input_uvc.so','d':'unset','r':'640x480','f':'15'}) # -d /dev/video0
+        self.args.update({'i':'/usr/local/lib/mjpg-streamer/input_uvc.so','d':'unset','r':'640x480','f':'15'}) # -d /dev/video0
     def get(self):
         self.validate()
         return '%s -d %s -r %s -f %s\' -n -y'%(self.args.get('i'),self.args.get('d'),self.args.get('r'),self.args.get('f'))
@@ -136,7 +136,7 @@ class MjpegOpencvIn(MjpegStreamerUtil):
     def __init__(self):
         super(MjpegOpencvIn,self).__init__()
         self.name = 'ocv-in'
-        self.args.update({'i':'/usr/local/lib/input_opencv.so','d':'unset','r':'640x480','f':'15'})
+        self.args.update({'i':'/usr/local/lib/mjpg-streamer/input_opencv.so','d':'unset','r':'640x480','f':'15'})
     def get(self):
         self.validate()
         return '%s -d %s -r %s -r %s -n -y'%(self.args.get('i'),self.args.get('d'),self.args.get('r'),self.args.get('f'))
@@ -154,7 +154,7 @@ class MjpegHttpIn(MjpegStreamerUtil):
     def __init__(self):
         super(MjpegHttpIn,self).__init__()
         self.name = 'http-in'
-        self.args.update({'i':'/usr/local/lib/input_opencv.so','h':'unset','p':'640x480'})
+        self.args.update({'i':'/usr/local/lib/mjpg-streamer/input_opencv.so','h':'unset','p':'640x480'})
     def get(self):
         self.validate()
         return '%s -H %s -p %s'%(self.args.get('i'),self.args.get('h'),self.args.get('p'))
@@ -213,7 +213,7 @@ class MjpegRaspiCamIn(MjpegStreamerUtil):
     def __init__(self):
         super(MjpegRaspiCamIn,self).__init__()
         self.name = 'rpi'
-        self.args.update({'i':'/usr/local/lib/input_raspicam.so','x':'1280','y':'720','q':'100','f':'15'})
+        self.args.update({'i':'/usr/local/lib/mjpg-streamer/input_raspicam.so','x':'1280','y':'720','q':'100','f':'15'})
     def get(self):
         self.validate()
         return '%s -x %s -y %s -quality %s -fps %s'%(self.args.get('i'),self.args.get('x'),self.args.get('y'),self.args.get('q'),self.args.get('f'))
@@ -245,7 +245,7 @@ class MjpegHttpOut(MjpegStreamerUtil):
     def __init__(self):
         super(MjpegHttpOut,self).__init__()
         self.name = 'http-out'
-        self.args.update({'o':'/usr/local/lib/output_http.so','p':'8080','c':None,'w':'/root/pi.stalker/static/mjpg'})
+        self.args.update({'o':'/usr/local/lib/mjpg-streamer/output_http.so','p':'8080','c':None,'w':'/root/pi.stalker/static/mjpg'})
     def get(self):
         self.validate()
         tmp = '%s -w %s -p %s'%(self.args.get('o'),self.args.get('w'),self.args.get('p'))
@@ -260,7 +260,7 @@ class MjpegViewerOut(MjpegStreamerUtil):
     def __init__(self):
         super(MjpegViewerOut,self).__init__()
         self.name = 'viewer'
-        self.args.update({'i':'/usr/local/lib/output_viewer.so'})
+        self.args.update({'i':'/usr/local/lib/mjpg-streamer/output_viewer.so'})
     def get(self):
         self.validate()
         return '%s'%(self.args.get('i'))
@@ -284,7 +284,7 @@ class MjpegFileOut(MjpegStreamerUtil):
     def __init__(self):
         super(MjpegFileOut,self).__init__()
         self.name = 'file-out'
-        self.args.update({'i':'/usr/local/lib/output_file.so','f':'unset','d':'15000'})
+        self.args.update({'i':'/usr/local/lib/mjpg-streamer/output_file.so','f':'unset','d':'15000'})
     def get(self):
         self.validate()
         return '%s -f %s -d %s'%(self.args.get('i'),self.args.get('f'),self.args.get('d'))
